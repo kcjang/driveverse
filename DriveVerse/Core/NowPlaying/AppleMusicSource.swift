@@ -16,6 +16,10 @@ struct AppleMusicSnapshot: Equatable {
     var durationSec: Double
     var positionSec: Double
     var isPlaying: Bool
+    /// MPMediaItem.playbackStoreID. Documented as non-optional, but it comes
+    /// back empty (or "0") for items with no Apple Music catalog equivalent,
+    /// so it is carried as an optional and normalized on the way in.
+    var catalogID: String?
 }
 
 enum AppleMusicStateMapper {
@@ -53,7 +57,8 @@ enum AppleMusicStateMapper {
             positionMs: anchor.positionMs,
             isPlaying: snapshot.isPlaying,
             source: .appleMusic,
-            capturedAt: anchor.capturedAt
+            capturedAt: anchor.capturedAt,
+            catalogID: snapshot.catalogID
         )
     }
 }
@@ -157,13 +162,17 @@ final class AppleMusicSource: NowPlayingSource {
 
     private func emit() {
         let snapshot = player.nowPlayingItem.map { item in
-            AppleMusicSnapshot(
+            // "0" is what a purely local item reports; treat it as absent
+            // rather than letting it reach a catalog lookup.
+            let storeID = item.playbackStoreID
+            return AppleMusicSnapshot(
                 title: item.title,
                 artist: item.artist,
                 album: item.albumTitle,
                 durationSec: item.playbackDuration,
                 positionSec: player.currentPlaybackTime,
-                isPlaying: player.playbackState == .playing
+                isPlaying: player.playbackState == .playing,
+                catalogID: (storeID.isEmpty || storeID == "0") ? nil : storeID
             )
         }
         // While playing the position advances every tick, so this always

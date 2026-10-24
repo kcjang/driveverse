@@ -83,6 +83,41 @@ import Foundation
         #expect(state?.capturedAt == at)
     }
 
+    @Test func catalogIDIsCarriedThrough() {
+        let snapshot = AppleMusicSnapshot(
+            title: "T", artist: "A", album: nil,
+            durationSec: 100, positionSec: 1, isPlaying: true,
+            catalogID: "1535780432"
+        )
+        #expect(AppleMusicStateMapper.state(from: snapshot, capturedAt: at)?.catalogID == "1535780432")
+    }
+
+    @Test func missingCatalogIDStaysNil() {
+        let snapshot = AppleMusicSnapshot(
+            title: "T", artist: "A", album: nil,
+            durationSec: 100, positionSec: 1, isPlaying: true
+        )
+        #expect(AppleMusicStateMapper.state(from: snapshot, capturedAt: at)?.catalogID == nil)
+    }
+
+    /// The carry-forward path rebuilds the state, so it must not drop the ID.
+    @Test func nanPositionCarryForwardKeepsCatalogID() {
+        let previous = NowPlayingState(
+            title: "T", artist: "A", album: nil,
+            durationMs: 100_000, positionMs: 42_000,
+            isPlaying: true, source: .appleMusic,
+            capturedAt: at.addingTimeInterval(-7), catalogID: "123"
+        )
+        let snapshot = AppleMusicSnapshot(
+            title: "T", artist: "A", album: nil,
+            durationSec: 100, positionSec: .nan, isPlaying: true,
+            catalogID: "123"
+        )
+        let state = AppleMusicStateMapper.state(from: snapshot, capturedAt: at, previous: previous)
+        #expect(state?.catalogID == "123")
+        #expect(state?.positionMs == 42_000)
+    }
+
     @Test func readablePositionIgnoresPrevious() {
         let previous = NowPlayingState(
             title: "T", artist: "A", album: nil,
