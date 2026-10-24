@@ -174,6 +174,8 @@ final class AppModel: ObservableObject {
             errorMessage = nil
         } catch SpotifyAuthError.missingClientID {
             errorMessage = "No Spotify client ID. Copy Secrets.example.plist to Secrets.plist and fill in your ID."
+        } catch PKCEError.randomnessUnavailable {
+            errorMessage = "Couldn't generate a secure login request. Restart DriveVerse and try again."
         } catch {
             errorMessage = "Spotify connection failed. Try again."
         }
@@ -269,16 +271,19 @@ final class AppModel: ObservableObject {
     /// off when leaving the car.
     private func updateKeepAlive() {
 #if os(iOS)
-        let shouldRun = driveMode
-        if shouldRun && !backgroundKeeper.isRunning {
-            do {
-                try backgroundKeeper.start()
-            } catch {
-                driveMode = false
-                errorMessage = "Drive Mode needs location access to stay alive in the background. Allow it for DriveVerse in Settings → Privacy → Location Services."
-            }
-        } else if !shouldRun && backgroundKeeper.isRunning {
+        guard driveMode else {
+            // Unconditional, not just when isRunning: a keeper still waiting
+            // on the permission prompt has nothing running yet but would
+            // activate itself the moment the user grants access.
             backgroundKeeper.stop()
+            return
+        }
+        guard !backgroundKeeper.isRunning else { return }
+        do {
+            try backgroundKeeper.start()
+        } catch {
+            driveMode = false
+            errorMessage = "Drive Mode needs location access to stay alive in the background. Allow it for DriveVerse in Settings → Privacy → Location Services."
         }
 #endif
     }

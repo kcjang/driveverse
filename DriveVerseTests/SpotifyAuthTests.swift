@@ -9,17 +9,30 @@ import Foundation
         #expect(PKCE.challenge(for: verifier) == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM")
     }
 
-    @Test func verifierShape() {
-        let v1 = PKCE.randomVerifier()
-        let v2 = PKCE.randomVerifier()
+    @Test func verifierShape() throws {
+        let v1 = try PKCE.randomVerifier()
+        let v2 = try PKCE.randomVerifier()
         #expect(v1.count == 64)
         #expect(v1 != v2)
         let allowed = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
         #expect(v1.allSatisfy { allowed.contains($0) })
     }
 
-    @Test func challengeIsBase64URLWithoutPadding() {
-        let challenge = PKCE.challenge(for: PKCE.randomVerifier())
+    /// base64url maps bytes to characters uniformly, so 40 verifiers (2,560
+    /// characters) cover the whole 64-symbol alphabet with overwhelming
+    /// probability — a symbol going missing here means the generator stopped
+    /// being uniform, which is what the old `byte % 66` pick was.
+    @Test func verifierCoversTheWholeAlphabetUniformly() throws {
+        let alphabet = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
+        var seen = Set<Character>()
+        for _ in 0..<40 {
+            seen.formUnion(try PKCE.randomVerifier())
+        }
+        #expect(seen == alphabet)
+    }
+
+    @Test func challengeIsBase64URLWithoutPadding() throws {
+        let challenge = PKCE.challenge(for: try PKCE.randomVerifier())
         #expect(challenge.count == 43) // SHA256 → 32 bytes → 43 base64url chars
         #expect(!challenge.contains("="))
         #expect(!challenge.contains("+"))

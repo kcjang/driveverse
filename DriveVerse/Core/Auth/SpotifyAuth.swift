@@ -9,13 +9,26 @@ import UIKit
 
 // MARK: - PKCE (RFC 7636)
 
+enum PKCEError: Error, Equatable {
+    /// The system CSPRNG refused. There is no safe fallback — a guessable
+    /// verifier defeats the whole point of PKCE.
+    case randomnessUnavailable
+}
+
 enum PKCE {
-    /// 64 characters from the RFC 7636 unreserved set.
-    static func randomVerifier() -> String {
-        let charset = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-        var bytes = [UInt8](repeating: 0, count: 64)
-        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
-        return String(bytes.map { charset[Int($0) % charset.count] })
+    /// 64 characters from the RFC 7636 unreserved set: 48 random bytes in
+    /// base64url, which is inside the spec's 43–128 range and uses only
+    /// `A–Z a–z 0–9 - _`. Base64 maps bytes to characters uniformly —
+    /// indexing a 66-character alphabet by `byte % 66` would have made the
+    /// first 58 characters ~1.5× more likely than the rest.
+    static func randomVerifier() throws -> String {
+        var bytes = [UInt8](repeating: 0, count: 48)
+        // Ignoring this status would ship the zero-filled buffer, i.e. the
+        // same constant verifier on every run.
+        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
+            throw PKCEError.randomnessUnavailable
+        }
+        return Data(bytes).base64URLEncodedString()
     }
 
     /// S256: BASE64URL(SHA256(ASCII(verifier))), no padding.
@@ -321,7 +334,7 @@ final class SpotifyAuth: NSObject, ObservableObject {
     func connect() async throws {
         guard let clientID else { throw SpotifyAuthError.missingClientID }
 
-        let verifier = PKCE.randomVerifier()
+        let verifier = try PKCE.randomVerifier()
         let state = UUID().uuidString
         var comps = URLComponents(string: "https://accounts.spotify.com/authorize")!
         comps.queryItems = [
