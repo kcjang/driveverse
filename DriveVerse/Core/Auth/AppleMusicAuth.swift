@@ -102,7 +102,9 @@ enum AppleDeveloperToken {
 /// Which catalog the user's account reads, and in which language. The same
 /// song is "정국" on `kr` and "Jung Kook" on `us`, and lyrics follow suit, so
 /// this is not optional decoration.
-struct AppleMusicStorefront: Equatable {
+struct AppleMusicStorefront: Equatable, Codable {
+    static let defaultsKey = "appleMusicStorefront"
+
     let id: String
     let language: String
 
@@ -207,6 +209,12 @@ final class AppleMusicAuth: ObservableObject {
         self.store = store
         self.session = session
         self.isConnected = store.load() != nil
+        // Remembered rather than re-resolved: the storefront only changes
+        // when the account does, and without this Settings loses the row
+        // after every relaunch until some track happens to need a lookup.
+        if let data = UserDefaults.standard.data(forKey: AppleMusicStorefront.defaultsKey) {
+            storefront = try? JSONDecoder().decode(AppleMusicStorefront.self, from: data)
+        }
     }
 
     var userToken: String? { store.load() }
@@ -228,6 +236,7 @@ final class AppleMusicAuth: ObservableObject {
         store.clear()
         developerToken = nil
         storefront = nil
+        UserDefaults.standard.removeObject(forKey: AppleMusicStorefront.defaultsKey)
         isConnected = false
         needsReconnect = false
 #if canImport(WebKit)
@@ -298,6 +307,9 @@ final class AppleMusicAuth: ObservableObject {
             throw AppleMusicAuthError.http(200)
         }
         storefront = parsed
+        if let data = try? JSONEncoder().encode(parsed) {
+            UserDefaults.standard.set(data, forKey: AppleMusicStorefront.defaultsKey)
+        }
         needsReconnect = false
         return parsed
     }

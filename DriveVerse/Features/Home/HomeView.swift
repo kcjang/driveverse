@@ -59,12 +59,6 @@ private struct NowPlayingCard: View {
                     ProgressView(value: position.trackProgress)
                         .tint(.accentColor)
                 }
-                // TEMPORARY (Apple lyrics spike): proves whether
-                // MPMediaItem.playbackStoreID yields a usable catalog ID on
-                // real playback. Remove once the provider work lands.
-                Text("catalogID: \(state.catalogID ?? "nil") · via \(model.lyricsProvider ?? "—")")
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(.orange)
             } else {
                 Label("Nothing playing", systemImage: "music.note")
                     .foregroundStyle(.secondary)

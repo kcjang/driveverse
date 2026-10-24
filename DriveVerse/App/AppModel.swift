@@ -38,9 +38,6 @@ final class AppModel: ObservableObject {
 
     @Published private(set) var nowPlaying: NowPlayingState?
     @Published private(set) var lyricsState: LyricsDisplayState = .idle
-    /// Which provider served the current lyrics. Diagnostic for the Apple
-    /// lyrics spike; goes with the Home readout.
-    @Published private(set) var lyricsProvider: String?
     @Published private(set) var position: LyricsPosition?
     @Published private(set) var appleMusicAuth: MediaAuthStatus = .unknown
     @Published private(set) var spotifyConnected = false
@@ -359,11 +356,6 @@ final class AppModel: ObservableObject {
             do {
                 let result = try await self.lyricsService.lyrics(for: state)
                 guard !Task.isCancelled else { return }
-                self.lyricsProvider = switch result {
-                case .syncedTTML: "Apple Music"
-                case .synced, .plain, .instrumental: "LRCLIB"
-                case .notFound: nil
-                }
                 switch result {
                 case .synced(let raw), .syncedTTML(let raw):
                     let parsed = if case .syncedTTML = result {
