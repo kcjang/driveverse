@@ -44,7 +44,7 @@ struct LRCLIBClient {
     func fetchLyrics(title: String, artist: String, album: String?, durationMs: Int?) async throws -> LyricsFetchResult {
         let normTitle = LyricsMatcher.normalizeTitle(title)
         let normArtist = LyricsMatcher.normalizeArtist(artist)
-        let normAlbum = album.map { LyricsMatcher.normalizeTitle($0) }
+        let normAlbum = album.map { LyricsMatcher.normalizeAlbum($0) }
         let durationSec = durationMs.map { Int((Double($0) / 1000).rounded()) }
 
         if let hit = try await get(track: normTitle, artist: normArtist, album: normAlbum, duration: durationSec) {

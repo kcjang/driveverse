@@ -21,11 +21,43 @@ enum LyricsMatcher {
         return collapseWhitespace(s)
     }
 
+    /// Albums keep their subtitles: "Help! - Remastered" is a different
+    /// record from "Help!", so the " - " and feat. trimming that helps track
+    /// titles would merge distinct releases here. Only case and bracketed
+    /// editions are normalized away.
+    static func normalizeAlbum(_ raw: String) -> String {
+        collapseWhitespace(stripBracketed(raw.lowercased()))
+    }
+
     /// Cache key for a track. Duration is bucketed to 5 s so slightly different
     /// reports of the same track (Apple Music vs Spotify) usually collide.
     static func signature(title: String, artist: String, durationMs: Int?) -> String {
-        let bucket = durationMs.map { Int((Double($0) / 5000.0).rounded()) } ?? -1
-        return "\(normalizeTitle(title))|\(normalizeArtist(artist))|\(bucket)"
+        key(title: title, artist: artist, bucket: durationMs.map(durationBucket) ?? -1)
+    }
+
+    /// Keys to probe on a cache *read*: the track's own bucket plus its
+    /// neighbours. Bucketing has to put a boundary somewhere, and the two
+    /// sources routinely report the same track a second or two apart — a
+    /// track straddling a boundary would otherwise cost a redundant LRCLIB
+    /// round trip every time playback switched source. Writes still go to
+    /// the primary key alone, so neighbours are read-only aliases.
+    static func cacheSignatures(title: String, artist: String, durationMs: Int?) -> [String] {
+        guard let durationMs else {
+            return [signature(title: title, artist: artist, durationMs: nil)]
+        }
+        let bucket = durationBucket(durationMs)
+        // Bucket -1 is the "duration unknown" key; never alias onto it.
+        return [bucket, bucket - 1, bucket + 1]
+            .filter { $0 >= 0 }
+            .map { key(title: title, artist: artist, bucket: $0) }
+    }
+
+    private static func durationBucket(_ durationMs: Int) -> Int {
+        Int((Double(durationMs) / 5000.0).rounded())
+    }
+
+    private static func key(title: String, artist: String, bucket: Int) -> String {
+        "\(normalizeTitle(title))|\(normalizeArtist(artist))|\(bucket)"
     }
 
     /// Picks the `/api/search` result whose normalized title matches and whose

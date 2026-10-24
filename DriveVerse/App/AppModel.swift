@@ -123,6 +123,8 @@ final class AppModel: ObservableObject {
     func start() {
         guard !started else { return }
         started = true
+        // One directory enumeration, once per launch — see LyricsCache.prune().
+        lyricsService.pruneCache()
 #if os(iOS)
         appleSource.start()
 #endif

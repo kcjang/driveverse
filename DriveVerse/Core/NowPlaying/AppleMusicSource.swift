@@ -75,6 +75,9 @@ final class AppleMusicSource: NowPlayingSource {
     private var observers: [NSObjectProtocol] = []
     private var timer: Timer?
     private var started = false
+    /// start() can finish without observing at all (authorization denied),
+    /// so endGeneratingPlaybackNotifications must not be called unpaired.
+    private var observing = false
 
     func start() {
         guard !started else { return }
@@ -111,10 +114,14 @@ final class AppleMusicSource: NowPlayingSource {
         observers = []
         lastSnapshot = nil
         lastState = nil
-        player.endGeneratingPlaybackNotifications()
+        if observing {
+            observing = false
+            player.endGeneratingPlaybackNotifications()
+        }
     }
 
     private func beginObserving() {
+        observing = true
         player.beginGeneratingPlaybackNotifications()
         let center = NotificationCenter.default
         for name: Notification.Name in [

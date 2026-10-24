@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import CryptoKit
 import Security
+import os
 #if os(iOS)
 import AuthenticationServices
 import UIKit
@@ -72,9 +73,13 @@ enum SpotifyTokenPolicy {
 
 // MARK: - Token storage
 
+enum KeychainError: Error, Equatable {
+    case unableToStore(OSStatus)
+}
+
 protocol TokenStore: AnyObject {
     func load() -> SpotifyToken?
-    func save(_ token: SpotifyToken)
+    func save(_ token: SpotifyToken) throws
     func clear()
 }
 
@@ -108,8 +113,10 @@ final class KeychainTokenStore: TokenStore {
         return try? JSONDecoder().decode(SpotifyToken.self, from: data)
     }
 
-    func save(_ token: SpotifyToken) {
-        guard let data = try? JSONEncoder().encode(token) else { return }
+    func save(_ token: SpotifyToken) throws {
+        guard let data = try? JSONEncoder().encode(token) else {
+            throw KeychainError.unableToStore(errSecParam)
+        }
         SecItemDelete(baseQuery as CFDictionary)
         var add = baseQuery
         add[kSecValueData as String] = data
@@ -117,7 +124,11 @@ final class KeychainTokenStore: TokenStore {
         // (WhenUnlocked) makes those reads fail and triggers spurious
         // reconnect banners mid-drive.
         add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-        SecItemAdd(add as CFDictionary, nil)
+        // Swallowing this status would leave isConnected true with nothing
+        // persisted — the failure would only surface as a mystery reconnect
+        // on the next launch.
+        let status = SecItemAdd(add as CFDictionary, nil)
+        guard status == errSecSuccess else { throw KeychainError.unableToStore(status) }
     }
 
     func clear() {
@@ -241,6 +252,8 @@ final class SpotifyAuth: NSObject, ObservableObject {
     /// itself is dead — reconnect instead of refresh-looping.
     static let revokedWindow: TimeInterval = 30
 
+    private static let log = Logger(subsystem: "com.praveetgupta.driveverse", category: "auth")
+
     @Published private(set) var isConnected: Bool
     @Published var needsReconnect = false
 
@@ -313,7 +326,13 @@ final class SpotifyAuth: NSObject, ObservableObject {
         defer { refreshTask = nil }
         do {
             let newToken = try await task.value
-            store.save(newToken)
+            do {
+                try store.save(newToken)
+            } catch {
+                // Not fatal: the access token in hand works for the rest of
+                // this session. Only the next launch pays, as a reconnect.
+                Self.log.warning("keychain save failed on refresh: \(String(describing: error), privacy: .public)")
+            }
             lastRefreshAt = now()
             isConnected = true
             if needsReconnect { needsReconnect = false }
@@ -357,7 +376,10 @@ final class SpotifyAuth: NSObject, ObservableObject {
         let token = try await tokenClient.exchangeCode(
             code, verifier: verifier, clientID: clientID, redirectURI: Self.redirectURI
         )
-        store.save(token)
+        // Propagated on purpose: a token we cannot persist is not a
+        // connection, and claiming otherwise strands the user on a Connected
+        // screen that forgets itself at the next launch.
+        try store.save(token)
         lastRefreshAt = now()
         isConnected = true
         needsReconnect = false

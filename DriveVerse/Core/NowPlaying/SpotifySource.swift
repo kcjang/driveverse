@@ -50,23 +50,33 @@ final class SpotifySource: NowPlayingSource {
     }
 
     /// Foreground resync: abandon the current sleep and poll immediately.
+    /// The outgoing task may be parked on a URLSession await and finish after
+    /// the replacement has already published — `publish` drops anything a
+    /// cancelled task tries to send, so the newer reading always wins.
     func pollNow() {
         guard pollTask != nil else { return }
         stop()
         start()
     }
 
+    /// Emits only while the calling task is live. Called from inside the poll
+    /// loop, so `Task.isCancelled` refers to that task.
+    private func publish(_ state: NowPlayingState?) {
+        guard !Task.isCancelled else { return }
+        subject.send(state)
+    }
+
     /// One poll; returns the delay until the next one.
     func pollOnce() async -> TimeInterval {
         guard await tokenProvider.isConnected else {
-            subject.send(nil)
+            publish(nil)
             return Self.idleInterval
         }
         let token: String
         do {
             token = try await tokenProvider.validAccessToken()
         } catch {
-            subject.send(nil)
+            publish(nil)
             return Self.idleInterval
         }
 
@@ -80,14 +90,14 @@ final class SpotifySource: NowPlayingSource {
             switch http.statusCode {
             case 200:
                 let state = try Self.parseCurrentlyPlaying(data, capturedAt: Date())
-                subject.send(state)
+                publish(state)
                 return state?.isPlaying == true ? activeInterval() : Self.idleInterval
             case 204: // nothing playing
-                subject.send(nil)
+                publish(nil)
                 return Self.idleInterval
             case 401:
                 await tokenProvider.handleUnauthorized()
-                subject.send(nil)
+                publish(nil)
                 return Self.idleInterval
             case 429:
                 let retryAfter = http.value(forHTTPHeaderField: "Retry-After").flatMap(TimeInterval.init)
