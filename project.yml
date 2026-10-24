@@ -1,6 +1,6 @@
 name: DriveVerse
 options:
-  bundleIdPrefix: com.praveetgupta
+  bundleIdPrefix: com.kichang
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
@@ -15,6 +15,9 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     CODE_SIGN_STYLE: Automatic
+    # Personal team for sideloading. Anyone else cloning this repo has to
+    # swap in their own, same as the bundle identifier (see README).
+    DEVELOPMENT_TEAM: "46K7A3U222"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1"
@@ -29,7 +32,7 @@ targets:
       - path: DriveVerse
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.praveetgupta.driveverse
+        PRODUCT_BUNDLE_IDENTIFIER: com.kichang.driveverse
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     info:
@@ -48,7 +51,7 @@ targets:
         NSLocationWhenInUseUsageDescription: Drive Mode uses a low-power location session to stay active in the background so lyrics keep updating on CarPlay and the lock screen. Positions are discarded immediately and never leave the device.
         NSLocationAlwaysAndWhenInUseUsageDescription: Allowing "Always" lets the CarPlay automation start Drive Mode automatically when you get in the car. Positions are discarded immediately and never leave the device.
         CFBundleURLTypes:
-          - CFBundleURLName: com.praveetgupta.driveverse.auth
+          - CFBundleURLName: com.kichang.driveverse.auth
             CFBundleURLSchemes: [driveverse]
         UILaunchScreen: {}
         # iPhone stays portrait-only. The complete ~ipad set satisfies
@@ -75,7 +78,7 @@ targets:
       - path: DriveVerse/LiveActivity/LyricsAttributes.swift
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.praveetgupta.driveverse.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.kichang.driveverse.widgets
     info:
       path: DriveVerseWidgets/Info.plist
       properties:

@@ -92,7 +92,7 @@ final class InMemoryTokenStore: TokenStore {
 }
 
 final class KeychainTokenStore: TokenStore {
-    private let service = "com.praveetgupta.driveverse.spotify"
+    private let service = "com.kichang.driveverse.spotify"
     private let account = "token"
 
     private var baseQuery: [String: Any] {
@@ -252,7 +252,7 @@ final class SpotifyAuth: NSObject, ObservableObject {
     /// itself is dead — reconnect instead of refresh-looping.
     static let revokedWindow: TimeInterval = 30
 
-    private static let log = Logger(subsystem: "com.praveetgupta.driveverse", category: "auth")
+    private static let log = Logger(subsystem: "com.kichang.driveverse", category: "auth")
 
     @Published private(set) var isConnected: Bool
     @Published var needsReconnect = false

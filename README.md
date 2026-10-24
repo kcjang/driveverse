@@ -88,7 +88,7 @@ If you *do* want Spotify:
 
 Open the project in Xcode, pick the **DriveVerse** scheme, and set your signing team on both the `DriveVerse` and `DriveVerseWidgets` targets (Signing & Capabilities tab). Plug in your iPhone and hit Run.
 
-**You'll need your own bundle identifier.** Bundle IDs are globally unique, and the one in this repo is already registered, so signing will fail with "cannot be registered to your development team" until you change it. Edit `project.yml` and replace `com.praveetgupta` with something of your own (the widget ID must stay a child of the app ID):
+**You'll need your own bundle identifier.** Bundle IDs are globally unique, and the one in this repo is already registered, so signing will fail with "cannot be registered to your development team" until you change it. Edit `project.yml` and replace `com.kichang` with something of your own (the widget ID must stay a child of the app ID):
 
 ```yaml
 bundleIdPrefix: com.yourname                             # options
