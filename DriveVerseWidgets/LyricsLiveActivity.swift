@@ -87,7 +87,8 @@ struct LockScreenLyricsView: View {
             Spacer(minLength: 0)
 
             Text(context.state.currentLine)
-                .font(.title2.bold())
+                .font(.title2)
+                .foregroundStyle(.yellow)
                 .lineLimit(2)
                 .minimumScaleFactor(0.5)
                 .contentTransition(.opacity)
@@ -95,7 +96,7 @@ struct LockScreenLyricsView: View {
 
             Text(context.state.nextLine)
                 .font(.title2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .id(context.state.nextLine)
@@ -136,13 +137,14 @@ struct LockScreenLyricsView: View {
             .foregroundStyle(.secondary)
 
             Text(context.state.currentLine)
-                .font(.title2.bold())
+                .font(.title2)
+                .foregroundStyle(.yellow)
                 .lineLimit(2)
                 .minimumScaleFactor(0.75)
 
             Text(context.state.nextLine)
                 .font(.title2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
 

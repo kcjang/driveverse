@@ -107,7 +107,7 @@ Normalize before querying LRCLIB: lowercase, strip parenthetical suffixes ("(Rem
 - `LyricsAttributes`: fixed = track title, artist, source. `ContentState`: `currentLine`, `nextLine`, `progress` (0–1 through track), `isPlaying`.
 - Start the activity when playback of a track with lyrics begins; end it 30 s after playback stops or when the app is terminated.
 - Update policy: only call `Activity.update` when the current line index changes or play/pause flips — NOT on every 500 ms tick. Typical song = 40–80 updates over 3–4 minutes; acceptable locally.
-- Lock screen view: title/artist small, current line large (2-line max, `.title2` bold), next line dimmed. Dynamic Island: compact = music note + marquee current line; expanded = same as lock screen.
+- Lock screen view: title/artist small, then the current and next line at the SAME size (`.title2`, 2-line max on the current one). Colour carries the distinction, not weight or dimming: current line yellow, next line bright white. The next line is read ahead of time — someone singing along needs it as legible as the current one, so it is never dimmed. Dynamic Island: compact = music note + marquee current line; expanded = same as lock screen.
 - CarPlay renders the lock-screen Live Activity presentation automatically on iOS 26 — no extra code, but keep the layout legible at small sizes: high contrast, no more than two text rows plus progress.
 - Info.plist: `NSSupportsLiveActivities = YES` in the app target.
 
