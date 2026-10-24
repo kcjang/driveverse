@@ -43,7 +43,13 @@ struct SettingsView: View {
             }
 
             Section {
-                if model.appleLyricsAuth.isConnected {
+                if model.appleLyricsAuth.needsReconnect {
+                    // Without this the row still reads "Connected" while
+                    // every lookup quietly falls back to LRCLIB.
+                    InfoBanner(symbol: "exclamationmark.triangle",
+                               text: "Apple Music session expired. Lyrics are coming from LRCLIB until you sign in again.")
+                    Button("Reconnect Apple Music") { showingAppleSignIn = true }
+                } else if model.appleLyricsAuth.isConnected {
                     Label("Connected", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                     if let storefront = model.appleLyricsAuth.storefront {
