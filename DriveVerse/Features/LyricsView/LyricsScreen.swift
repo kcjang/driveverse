@@ -57,6 +57,16 @@ struct LyricsScreen: View {
 struct SyncedLyricsView: View {
     let lines: [LRCLine]
     let currentIndex: Int?
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// Same rule as the Live Activity: every line is the same size and colour
+    /// alone says which one is playing. A line you are about to sing has to be
+    /// as readable as the one you are singing, so nothing here is dimmed.
+    /// Yellow matches the CarPlay tile, but it disappears on a white
+    /// background — hence orange in light mode.
+    private var highlight: Color {
+        colorScheme == .dark ? .yellow : .orange
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -64,9 +74,8 @@ struct SyncedLyricsView: View {
                 LazyVStack(alignment: .leading, spacing: 20) {
                     ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                         Text(line.text)
-                            .font(index == currentIndex ? .title2.bold() : .title3)
-                            .foregroundStyle(index == currentIndex ? .primary : .secondary)
-                            .opacity(index == currentIndex ? 1 : 0.55)
+                            .font(.title2)
+                            .foregroundStyle(index == currentIndex ? highlight : .primary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .id(index)
                     }
@@ -94,7 +103,7 @@ private struct PlainLyricsView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 Text(text)
-                    .font(.title3)
+                    .font(.title2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(24)
