@@ -34,6 +34,12 @@ final class LiveActivityController {
     private var lastSentTrackKey: String?
     private var lastSentIsPlaying: Bool?
 
+    /// How long a tile stays trustworthy once nothing is keeping the app
+    /// awake. Without Drive Mode iOS suspends us within seconds and the
+    /// lyric stops advancing, so the tile is marked stale and the widget
+    /// dims it rather than presenting a stopped line as the current one.
+    static let staleHorizon: TimeInterval = 20
+
     /// While Drive Mode is on the session must survive arbitrary pauses:
     /// hold the activity (pause glyph) instead of ending it after the grace
     /// period, because a fresh start would need the foreground.
@@ -87,8 +93,9 @@ final class LiveActivityController {
         switch throttle.decide(critical: critical, now: Date()) {
         case .sendNow:
             cancelPendingUpdate() // superseded by newer content
+            let stale = staleDate
             Task {
-                await activity.update(ActivityContent(state: content, staleDate: nil))
+                await activity.update(ActivityContent(state: content, staleDate: stale))
             }
         case .coalesce(let fireIn):
             pendingContent = content
@@ -110,7 +117,7 @@ final class LiveActivityController {
             self.pendingTask = nil
             guard let content, let activity = self.activity else { return }
             self.throttle.noteSent(now: Date())
-            await activity.update(ActivityContent(state: content, staleDate: nil))
+            await activity.update(ActivityContent(state: content, staleDate: self.staleDate))
         }
     }
 
@@ -136,7 +143,7 @@ final class LiveActivityController {
         do {
             let requested = try Activity.request(
                 attributes: LyricsAttributes(),
-                content: ActivityContent(state: content, staleDate: nil)
+                content: ActivityContent(state: content, staleDate: staleDate)
             )
             activity = requested
             watch(requested)
@@ -204,6 +211,12 @@ final class LiveActivityController {
     private func cancelScheduledEnd() {
         endTask?.cancel()
         endTask = nil
+    }
+
+    /// nil while Drive Mode holds the app awake — the tile stays live for
+    /// as long as the drive does.
+    private var staleDate: Date? {
+        holdWhilePaused ? nil : Date().addingTimeInterval(Self.staleHorizon)
     }
 
     private static func key(for state: NowPlayingState) -> String {
