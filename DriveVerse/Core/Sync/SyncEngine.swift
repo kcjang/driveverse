@@ -17,8 +17,28 @@ struct LyricsPosition: Equatable {
 /// every ~5 s) and maps the position to the current LRC line index.
 /// The clock is injected so every code path is unit-testable.
 final class SyncEngine {
-    static let seekThresholdMs = 2000
+    /// Spotify is polled every 3–10 s and the position is extrapolated in
+    /// between, so deviations of a second or two are polling jitter rather
+    /// than movement and adopting them makes the display stutter.
+    static let spotifySeekThresholdMs = 2000
+    /// Apple Music hands back an exact position every second, so there is no
+    /// jitter to absorb. The old shared 2 s grace meant a lag of up to two
+    /// seconds was treated as noise and never corrected — with lyric lines
+    /// often 2–4 s apart, that alone could hold the wrong line on screen.
+    static let appleMusicSeekThresholdMs = 500
     static let tickInterval: TimeInterval = 0.5
+
+    static func seekThresholdMs(for source: MusicSource) -> Int {
+        switch source {
+        case .appleMusic: return appleMusicSeekThresholdMs
+        case .spotify: return spotifySeekThresholdMs
+        }
+    }
+
+    /// User nudge for LRC files whose timings are off, in milliseconds.
+    /// Positive delays the lyrics (each line shows later). Applies to the
+    /// line lookup only — the progress bar keeps showing true playback.
+    var lyricOffsetMs = 0
 
     var now: () -> Date
     private(set) var anchor: NowPlayingState?
@@ -49,7 +69,7 @@ final class SyncEngine {
            current.isPlaying == new.isPlaying,
            new.isPlaying {
             let expected = Self.extrapolatedPositionMs(anchor: current, at: new.capturedAt)
-            if abs(expected - new.positionMs) <= Self.seekThresholdMs {
+            if abs(expected - new.positionMs) <= Self.seekThresholdMs(for: new.source) {
                 return // within jitter tolerance — keep the smoother existing anchor
             }
         }
@@ -74,7 +94,8 @@ final class SyncEngine {
         let pos = Self.extrapolatedPositionMs(anchor: anchor, at: now())
         positionSubject.send(Self.position(
             atMs: pos, lines: lines,
-            durationMs: anchor.durationMs, isPlaying: anchor.isPlaying
+            durationMs: anchor.durationMs, isPlaying: anchor.isPlaying,
+            lyricOffsetMs: lyricOffsetMs
         ))
     }
 
@@ -107,8 +128,17 @@ final class SyncEngine {
         return lo
     }
 
-    static func position(atMs pos: Int, lines: [LRCLine], durationMs: Int?, isPlaying: Bool) -> LyricsPosition {
-        let index = lineIndex(forPositionMs: pos, in: lines)
+    static func position(
+        atMs pos: Int,
+        lines: [LRCLine],
+        durationMs: Int?,
+        isPlaying: Bool,
+        lyricOffsetMs: Int = 0
+    ) -> LyricsPosition {
+        // Only the lyric lookup is nudged; positionMs and trackProgress stay
+        // true playback so the progress bar never lies.
+        let lyricPos = pos - lyricOffsetMs
+        let index = lineIndex(forPositionMs: lyricPos, in: lines)
         let currentLine = index.map { lines[$0].text }
         let nextLine: String?
         if let index {
@@ -122,7 +152,7 @@ final class SyncEngine {
             let start = lines[index].timeMs
             let end = index + 1 < lines.count ? lines[index + 1].timeMs : (durationMs ?? start + 5000)
             if end > start {
-                lineProgress = min(1, max(0, Double(pos - start) / Double(end - start)))
+                lineProgress = min(1, max(0, Double(lyricPos - start) / Double(end - start)))
             }
         }
         let trackProgress = durationMs.flatMap { dur in

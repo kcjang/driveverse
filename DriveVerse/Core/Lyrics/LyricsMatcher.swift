@@ -60,17 +60,48 @@ enum LyricsMatcher {
         "\(normalizeTitle(title))|\(normalizeArtist(artist))|\(bucket)"
     }
 
-    /// Picks the `/api/search` result whose normalized title matches and whose
-    /// duration is within ±3 s (when we know ours); prefers synced lyrics.
-    static func bestMatch(from candidates: [LRCLIBResponse], title: String, durationMs: Int?) -> LRCLIBResponse? {
+    /// Picks the `/api/search` result that best describes the playing track:
+    /// normalized title must match and the duration must be within ±3 s (when
+    /// we know ours).
+    ///
+    /// LRCLIB is community-uploaded, so one song routinely has a dozen
+    /// records and uploads of the same recording can differ by seconds —
+    /// "Dynamite" carries both a 00:27.46 and a 00:29.83 timing for the same
+    /// line. Taking the first synced hit therefore picked a timing at random.
+    /// Rank instead: synced beats plain, then an exact artist match, then an
+    /// album match, then the closest duration. Records that tie on all four
+    /// are genuinely indistinguishable from their metadata — that residue is
+    /// what the Settings lyric offset is for.
+    static func bestMatch(
+        from candidates: [LRCLIBResponse],
+        title: String,
+        artist: String? = nil,
+        album: String? = nil,
+        durationMs: Int?
+    ) -> LRCLIBResponse? {
         let wantedTitle = normalizeTitle(title)
+        let wantedArtist = artist.map(normalizeArtist)
+        let wantedAlbum = album.map(normalizeAlbum)
+
         let matches = candidates.filter { candidate in
             guard normalizeTitle(candidate.trackName ?? "") == wantedTitle else { return false }
             guard let durationMs else { return true }
             guard let duration = candidate.duration else { return false }
             return abs(duration * 1000 - Double(durationMs)) <= 3000
         }
-        return matches.first { $0.syncedLyrics?.isEmpty == false } ?? matches.first
+
+        // Lower is better in every slot, so plain tuple ordering ranks them.
+        func rank(_ c: LRCLIBResponse) -> (Int, Int, Int, Double) {
+            let unsynced = (c.syncedLyrics?.isEmpty == false) ? 0 : 1
+            let artistMiss = wantedArtist.map { normalizeArtist(c.artistName ?? "") == $0 ? 0 : 1 } ?? 0
+            let albumMiss = wantedAlbum.map { normalizeAlbum(c.albumName ?? "") == $0 ? 0 : 1 } ?? 0
+            let durationGap = durationMs.flatMap { want in
+                c.duration.map { abs($0 * 1000 - Double(want)) }
+            } ?? 0
+            return (unsynced, artistMiss, albumMiss, durationGap)
+        }
+
+        return matches.min { rank($0) < rank($1) }
     }
 
     // MARK: - Helpers
