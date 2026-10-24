@@ -211,6 +211,39 @@ extension HTTPStubbedTests {
         #expect(StubURLProtocol.requests.allSatisfy { $0.url?.host?.contains("apple") == false })
     }
 
+    /// Regression: a miss cached before Apple was connected used to be
+    /// served straight back, so connecting Apple changed nothing for a day.
+    @MainActor @Test func aMissCachedWithoutAppleDoesNotBlockApple() async throws {
+        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let playing = state(catalogID: "1637408854")
+
+        // First play with Apple disconnected: nobody has it.
+        route(apple: { (200, catalogJSON(lyrics: sampleTTML)) }, lrclib: { (404, Data()) })
+        let offline = FakeAppleCredentials()
+        offline.isConnected = false
+        #expect(try await makeService(credentials: offline, dir: dir).lyrics(for: playing) == .notFound)
+
+        // Connect Apple and play it again — the stale miss must not win.
+        route(apple: { (200, catalogJSON(lyrics: sampleTTML)) }, lrclib: { (404, Data()) })
+        let online = FakeAppleCredentials()
+        let result = try await makeService(credentials: online, dir: dir).lyrics(for: playing)
+        #expect(result == .syncedTTML(sampleTTML))
+    }
+
+    /// Once Apple has been asked, its miss is worth keeping for the day.
+    @MainActor @Test func aMissRecordedWithAppleIsReused() async throws {
+        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let playing = state(catalogID: "1637408854")
+
+        route(apple: { (200, catalogJSON()) }, lrclib: { (404, Data()) })
+        let credentials = FakeAppleCredentials()
+        #expect(try await makeService(credentials: credentials, dir: dir).lyrics(for: playing) == .notFound)
+        let afterFirst = StubURLProtocol.requests.count
+
+        #expect(try await makeService(credentials: credentials, dir: dir).lyrics(for: playing) == .notFound)
+        #expect(StubURLProtocol.requests.count == afterFirst)
+    }
+
     /// The catalog id is exact, so it is the cache key when present — a
     /// second play must not go back to the network.
     @MainActor @Test func resultIsCachedUnderTheCatalogKey() async throws {

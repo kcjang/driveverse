@@ -38,8 +38,16 @@ final class LyricsService {
         let signatureKeys = LyricsMatcher.cacheSignatures(
             title: state.title, artist: state.artist, durationMs: state.durationMs
         )
+        let appleAvailable = await canAskApple(for: state)
+
         for key in ([catalogKey].compactMap { $0 } + signatureKeys) {
-            if let hit = cache.lookup(signature: key) { return hit }
+            guard let hit = cache.lookup(signature: key) else { continue }
+            // A miss is only as good as the providers that produced it.
+            // Entries under a signature key predate Apple being available,
+            // so they say nothing about what Apple would answer now —
+            // without this, connecting Apple changes nothing for a day.
+            if hit == .notFound, appleAvailable, key != catalogKey { continue }
+            return hit
         }
 
         var result = await appleLyrics(for: state)
@@ -56,9 +64,18 @@ final class LyricsService {
         }
 
         let resolved = result ?? .notFound
-        // Store under the strongest key the track has.
-        cache.store(resolved, signature: catalogKey ?? signatureKeys[0])
+        // Negatives recorded without Apple must not land on the catalog key,
+        // or they would be trusted later once Apple is connected.
+        let key = appleAvailable ? (catalogKey ?? signatureKeys[0]) : signatureKeys[0]
+        cache.store(resolved, signature: key)
         return resolved
+    }
+
+    private func canAskApple(for state: NowPlayingState) async -> Bool {
+        guard appleClient != nil, let credentials = appleCredentials, state.catalogID != nil else {
+            return false
+        }
+        return await credentials.isConnected
     }
 
     /// nil means "Apple was not asked, or could not answer" — distinct from
