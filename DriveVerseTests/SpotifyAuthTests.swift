@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import Security
 @testable import DriveVerse
 
 @Suite struct PKCETests {
@@ -81,6 +82,14 @@ private func drainBody(_ request: URLRequest) -> String {
     return String(data: data, encoding: .utf8) ?? ""
 }
 
+/// Stands in for a Keychain that refuses to write.
+private final class FailingTokenStore: TokenStore {
+    var token: SpotifyToken?
+    func load() -> SpotifyToken? { token }
+    func save(_ token: SpotifyToken) throws { throw KeychainError.unableToStore(errSecIO) }
+    func clear() { token = nil }
+}
+
 extension HTTPStubbedTests {
 @Suite struct SpotifyAuthRefreshTests {
     @MainActor
@@ -96,6 +105,26 @@ extension HTTPStubbedTests {
             clientID: "client123"
         )
         return (auth, store)
+    }
+
+    /// A Keychain write failure must not fail the refresh: the access token
+    /// just fetched is good for the rest of the session, and throwing here
+    /// would disconnect the user mid-drive over a next-launch problem.
+    @MainActor @Test func keychainFailureDoesNotBreakAnInFlightRefresh() async throws {
+        StubURLProtocol.reset { _ in
+            (200, Data(#"{"access_token":"new-access","refresh_token":"new-refresh","expires_in":3600}"#.utf8))
+        }
+        let store = FailingTokenStore()
+        store.token = SpotifyToken(
+            accessToken: "old-access", refreshToken: "old-refresh",
+            expiresAt: Date().addingTimeInterval(-60)
+        )
+        let auth = SpotifyAuth(
+            store: store, session: StubURLProtocol.makeSession(), clientID: "client123"
+        )
+
+        #expect(try await auth.validAccessToken() == "new-access")
+        #expect(auth.isConnected)
     }
 
     @MainActor @Test func freshTokenSkipsNetwork() async throws {

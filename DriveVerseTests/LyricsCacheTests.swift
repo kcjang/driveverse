@@ -52,6 +52,49 @@ import Foundation
         #expect(cache.lookup(signature: "sig") == nil)
     }
 
+    /// lookup only expires what someone asks for, so the sweep is the only
+    /// thing that reclaims a track never played again.
+    @Test func pruneRemovesEntriesPastMaxAge() throws {
+        let now = Date(timeIntervalSinceReferenceDate: 700_000_000)
+        let (cache, dir) = makeCache(now: { now })
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        cache.store(.synced("x"), signature: "sig")
+        let file = try #require(try FileManager.default
+            .contentsOfDirectory(at: dir, includingPropertiesForKeys: nil).first)
+        // The sweep reads modification dates, not the stored timestamp.
+        try FileManager.default.setAttributes(
+            [.modificationDate: now.addingTimeInterval(-31 * 24 * 3600)],
+            ofItemAtPath: file.path
+        )
+
+        cache.prune()
+        #expect(try FileManager.default
+            .contentsOfDirectory(at: dir, includingPropertiesForKeys: nil).isEmpty)
+    }
+
+    @Test func pruneKeepsFreshEntries() throws {
+        let (cache, dir) = makeCache(now: Date.init)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        cache.store(.synced("x"), signature: "sig")
+        cache.prune()
+        #expect(cache.lookup(signature: "sig") == .synced("x"))
+    }
+
+    @Test func pruneTrimsDownToTheEntryCap() throws {
+        let (cache, dir) = makeCache(now: Date.init)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        for i in 0..<(LyricsCache.maxEntries + 5) {
+            cache.store(.synced("line \(i)"), signature: "sig-\(i)")
+        }
+        cache.prune()
+        let remaining = try FileManager.default
+            .contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+        #expect(remaining.count == LyricsCache.maxEntries)
+    }
+
     @Test func clearRemovesEverything() {
         let (cache, dir) = makeCache(now: Date.init)
         defer { try? FileManager.default.removeItem(at: dir) }

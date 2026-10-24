@@ -12,6 +12,8 @@ struct CachedLyrics: Codable, Equatable {
 final class LyricsCache {
     static let maxAge: TimeInterval = 30 * 24 * 3600
     static let notFoundMaxAge: TimeInterval = 24 * 3600
+    /// Ceiling for the sweep — a few hundred KB of JSON at typical sizes.
+    static let maxEntries = 500
 
     private let directory: URL
     private let fileManager = FileManager.default
@@ -44,6 +46,42 @@ final class LyricsCache {
         let cached = CachedLyrics(result: result, storedAt: now())
         guard let data = try? JSONEncoder().encode(cached) else { return }
         try? data.write(to: fileURL(for: signature), options: .atomic)
+    }
+
+    /// Housekeeping sweep, run once per launch.
+    ///
+    /// `lookup` only discards an entry when something asks for it, so a track
+    /// never played again would sit on disk forever. This drops anything past
+    /// `maxAge` and then trims the oldest until at most `maxEntries` remain.
+    /// It works off file modification dates rather than the stored timestamps
+    /// so it costs one directory enumeration instead of decoding every file —
+    /// `lookup` remains the authority on freshness, including the shorter
+    /// not-found TTL. Bounding disk use is all this has to get right.
+    func prune() {
+        guard let urls = try? fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: .skipsHiddenFiles
+        ) else { return }
+
+        let cutoff = now().addingTimeInterval(-Self.maxAge)
+        var living: [(url: URL, modified: Date)] = []
+        for url in urls {
+            let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?
+                .contentModificationDate ?? .distantPast
+            if modified < cutoff {
+                try? fileManager.removeItem(at: url)
+            } else {
+                living.append((url, modified))
+            }
+        }
+
+        guard living.count > Self.maxEntries else { return }
+        let doomed = living.sorted { $0.modified < $1.modified }
+            .prefix(living.count - Self.maxEntries)
+        for entry in doomed {
+            try? fileManager.removeItem(at: entry.url)
+        }
     }
 
     func clear() {

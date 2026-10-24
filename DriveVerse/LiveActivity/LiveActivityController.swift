@@ -34,9 +34,6 @@ final class LiveActivityController {
     private var lastSentTrackKey: String?
     private var lastSentIsPlaying: Bool?
 
-    /// Drive Mode's keep-alive only runs while an activity is actually up.
-    var isActive: Bool { activity != nil }
-
     /// While Drive Mode is on the session must survive arbitrary pauses:
     /// hold the activity (pause glyph) instead of ending it after the grace
     /// period, because a fresh start would need the foreground.
@@ -95,19 +92,23 @@ final class LiveActivityController {
             }
         case .coalesce(let fireIn):
             pendingContent = content
-            armPendingUpdate(after: fireIn, on: activity)
+            armPendingUpdate(after: fireIn)
         }
     }
 
     /// Trailing edge of the throttle: deliver the newest coalesced content
     /// once the spacing interval elapses, so no line change is ever lost.
-    private func armPendingUpdate(after delay: TimeInterval, on activity: Activity<LyricsAttributes>) {
+    /// The activity is re-read when the task fires rather than captured —
+    /// the system can end it while we wait, and the watcher clears it.
+    private func armPendingUpdate(after delay: TimeInterval) {
         guard pendingTask == nil else { return } // armed — content already replaced
         pendingTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled, let self, let content = self.pendingContent else { return }
+            guard !Task.isCancelled, let self else { return }
+            let content = self.pendingContent
             self.pendingContent = nil
             self.pendingTask = nil
+            guard let content, let activity = self.activity else { return }
             self.throttle.noteSent(now: Date())
             await activity.update(ActivityContent(state: content, staleDate: nil))
         }

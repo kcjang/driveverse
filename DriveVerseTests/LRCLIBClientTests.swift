@@ -179,5 +179,34 @@ extension HTTPStubbedTests {
 
         try? FileManager.default.removeItem(at: dir)
     }
+
+    /// Apple Music and Spotify describe the same recording a couple of
+    /// seconds apart, which can land them in adjacent 5 s duration buckets.
+    /// Reads probe the neighbours so switching source doesn't refetch.
+    @Test func cacheHitsAcrossADurationBucketBoundary() async throws {
+        StubURLProtocol.reset { _ in (200, syncedHit) }
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("driveverse-tests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let service = LyricsService(
+            client: LRCLIBClient(session: StubURLProtocol.makeSession()),
+            cache: LyricsCache(directory: dir)
+        )
+        func state(durationMs: Int) -> NowPlayingState {
+            NowPlayingState(
+                title: "Song", artist: "Artist", album: "Album",
+                durationMs: durationMs, positionMs: 0,
+                isPlaying: true, source: .spotify, capturedAt: Date()
+            )
+        }
+
+        // 197.4 s → bucket 39, 200.0 s → bucket 40.
+        _ = try await service.lyrics(for: state(durationMs: 197_400))
+        #expect(StubURLProtocol.requests.count == 1)
+
+        let neighbour = try await service.lyrics(for: state(durationMs: 200_000))
+        #expect(neighbour == .synced("[00:01.00]Hello world"))
+        #expect(StubURLProtocol.requests.count == 1) // served from the neighbour key
+    }
 }
 }

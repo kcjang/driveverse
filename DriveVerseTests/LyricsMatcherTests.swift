@@ -51,6 +51,34 @@ import Testing
         #expect(a != b)
     }
 
+    /// Album subtitles are part of the record's identity — unlike track
+    /// titles, where " - Remastered" is noise. normalizeTitle used to be
+    /// reused here and cut "Help! - Remastered" down to "help!".
+    @Test func albumKeepsItsDashSuffix() {
+        #expect(LyricsMatcher.normalizeAlbum("Help! - Remastered") == "help! - remastered")
+        #expect(LyricsMatcher.normalizeAlbum("Abbey Road (2019 Mix)") == "abbey road")
+        #expect(LyricsMatcher.normalizeAlbum("  OK   Computer ") == "ok computer")
+    }
+
+    @Test func cacheSignaturesCoverNeighbouringBuckets() {
+        let sigs = LyricsMatcher.cacheSignatures(title: "T", artist: "A", durationMs: 200_000)
+        #expect(sigs.first == LyricsMatcher.signature(title: "T", artist: "A", durationMs: 200_000))
+        #expect(sigs.contains("t|a|39"))
+        #expect(sigs.contains("t|a|40"))
+        #expect(sigs.contains("t|a|41"))
+    }
+
+    /// Bucket -1 means "duration unknown"; a very short track must not
+    /// alias onto it.
+    @Test func cacheSignaturesNeverAliasTheUnknownDurationKey() {
+        let sigs = LyricsMatcher.cacheSignatures(title: "T", artist: "A", durationMs: 1_000)
+        #expect(sigs == ["t|a|0", "t|a|1"])
+    }
+
+    @Test func cacheSignaturesWithoutDurationIsJustTheOneKey() {
+        #expect(LyricsMatcher.cacheSignatures(title: "T", artist: "A", durationMs: nil) == ["t|a|-1"])
+    }
+
     @Test func signatureWithoutDuration() {
         let s = LyricsMatcher.signature(title: "Song", artist: "Artist", durationMs: nil)
         #expect(s == "song|artist|-1")
