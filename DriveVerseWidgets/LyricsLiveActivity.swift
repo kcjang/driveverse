@@ -106,6 +106,11 @@ struct LockScreenLyricsView: View {
         .frame(maxHeight: .infinity)
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        // A stale tile is showing a line the song has already moved past.
+        // Dimming says "this stopped" without taking the lyric away, which
+        // is the one thing worse than no tile: a wrong line presented with
+        // full confidence.
+        .opacity(context.isStale ? 0.4 : 1)
         .animation(.smooth(duration: 0.5), value: context.state)
     }
 
@@ -144,6 +149,7 @@ struct LockScreenLyricsView: View {
                 .tint(.white.opacity(0.85))
         }
         .padding(14)
+        .opacity(context.isStale ? 0.4 : 1)
     }
 }
 #endif

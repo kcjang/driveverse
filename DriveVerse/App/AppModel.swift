@@ -28,6 +28,7 @@ final class AppModel: ObservableObject {
     static let sourcePinKey = "sourcePin"
     static let lyricOffsetKey = "lyricOffsetMs"
     static let romanizeLyricsKey = "romanizeLyrics"
+    static let driveModeKey = "driveMode"
     /// LRCLIB uploads of one song can disagree by a couple of seconds, so the
     /// nudge has to cover more than the sync engine's own tolerance.
     static let lyricOffsetRangeMs = 3000
@@ -45,6 +46,11 @@ final class AppModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var driveMode = false {
         didSet {
+            // Survives a process restart. Losing it silently was worse than
+            // it sounds: iOS resurrects the app without the keep-alive, the
+            // tile freezes on whatever line it last had, and the driver is
+            // left reading lyrics from two songs ago with nothing to say so.
+            UserDefaults.standard.set(driveMode, forKey: Self.driveModeKey)
 #if os(iOS)
             liveActivity.holdWhilePaused = driveMode
 #if canImport(ActivityKit)
@@ -180,6 +186,12 @@ final class AppModel: ObservableObject {
 #endif
         spotifySource.start()
         syncEngine.startTicking()
+
+        // Restored last, so the keeper and the Live Activity come up against
+        // a pipeline that is already running.
+        if UserDefaults.standard.bool(forKey: Self.driveModeKey), !driveMode {
+            driveMode = true
+        }
     }
 
     /// Called when the scene returns to .active: any background stretch may
