@@ -85,6 +85,9 @@ final class AppModel: ObservableObject {
     // MARK: Pipeline
 
     let spotifyAuth: SpotifyAuth
+    /// Credentials for Apple's own lyrics API. Connecting is optional —
+    /// without it everything falls back to LRCLIB exactly as before.
+    let appleLyricsAuth = AppleMusicAuth()
     private let spotifySource: SpotifySource
 #if os(iOS)
     private let appleSource: AppleMusicSource
@@ -241,6 +244,12 @@ final class AppModel: ObservableObject {
             .store(in: &cancellables)
         spotifyAuth.$needsReconnect
             .sink { [weak self] in self?.spotifyNeedsReconnect = $0 }
+            .store(in: &cancellables)
+
+        // Mirror Apple's auth so SwiftUI redraws; AppModel is what the views
+        // observe.
+        appleLyricsAuth.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
 #if os(iOS)

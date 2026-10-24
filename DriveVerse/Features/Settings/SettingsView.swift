@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @AppStorage(AppModel.pollIntervalKey) private var pollInterval: Double = 5
     @State private var cacheCleared = false
+    @State private var showingAppleSignIn = false
 
     var body: some View {
         Form {
@@ -39,6 +40,25 @@ struct SettingsView: View {
                 Text("Spotify")
             } footer: {
                 Text("How often DriveVerse asks Spotify what's playing. Lower is snappier; higher saves battery and API quota. Between reports, lyric timing is extrapolated locally.")
+            }
+
+            Section {
+                if model.appleLyricsAuth.isConnected {
+                    Label("Connected", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    if let storefront = model.appleLyricsAuth.storefront {
+                        LabeledContent("Storefront", value: "\(storefront.id) · \(storefront.language)")
+                    }
+                    Button("Sign out of Apple Music", role: .destructive) {
+                        model.appleLyricsAuth.disconnect()
+                    }
+                } else {
+                    Button("Connect Apple Music") { showingAppleSignIn = true }
+                }
+            } header: {
+                Text("Apple Music lyrics")
+            } footer: {
+                Text("Optional. Signing in lets DriveVerse read the lyrics Apple already has for a track, matched by its exact catalog ID instead of guessing from the title. Tracks LRCLIB has never heard of start working, and the timings are the ones you're hearing. This uses Apple's internal web-player API, so it is outside Apple Music's terms and can break without notice — LRCLIB stays the fallback either way.")
             }
 
             Section {
@@ -93,6 +113,11 @@ struct SettingsView: View {
         .navigationTitle("Settings")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingAppleSignIn) {
+            AppleMusicSignInSheet { token in
+                Task { await model.appleLyricsAuth.adopt(userToken: token) }
+            }
+        }
 #endif
     }
 

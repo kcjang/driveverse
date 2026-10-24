@@ -22,12 +22,15 @@
 		27EE35BFA39B03A7D707CCD5 /* LyricsAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D50CB10C457B5FDA5C18A4 /* LyricsAttributes.swift */; };
 		3144255AF5A7332A8DC1E6CB /* LiveActivityThrottleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 519AFBF581C59568D1BC6BCB /* LiveActivityThrottleTests.swift */; };
 		3850C33B60081FB30D645855 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 96FBECE39D05D602D1D21998 /* Assets.xcassets */; };
+		3DEA39D8F3A3D4AFF8B7638E /* TTMLParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ECAFD8611A624FBB7B55EBE /* TTMLParser.swift */; };
 		435B627E39BF96A092465F41 /* TransliteratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751D649ABA7EA56CCE1096E0 /* TransliteratorTests.swift */; };
 		45B35ED49CD2C195FD66CC96 /* LRCLIBClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED260159BBFBE6E21D3E96F0 /* LRCLIBClientTests.swift */; };
 		4CECC61AC61FF6C56E16CDEE /* LyricsMatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5806DC04680356D910CB26 /* LyricsMatcherTests.swift */; };
+		5B2B2A8B563733B3553930DF /* AppleMusicAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD228A318AF935BB7742934 /* AppleMusicAuth.swift */; };
 		60727B17611118FEE4136983 /* LyricsAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D50CB10C457B5FDA5C18A4 /* LyricsAttributes.swift */; };
 		632665D24FDE43A4F3A2D886 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADC4F0A911AA90F04EDD9D29 /* HomeView.swift */; };
 		632FB0A9869AD363AEF1B1B2 /* SyncEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4833029C28CE94E1B93117 /* SyncEngineTests.swift */; };
+		6514244F0E87EB08AF28141D /* AppleMusicSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D893F8C769ADE35D950ED0 /* AppleMusicSignInSheet.swift */; };
 		69D23CEBEC66777E7396B410 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C7886F813AC23359C59468 /* SettingsView.swift */; };
 		79504D01376FDC6F5E609362 /* DriveModeIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22F7D809660551ADBB8DD67 /* DriveModeIntents.swift */; };
 		7B560BB37413F13CD2C2A307 /* SpotifySourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCA7F680E5F709BA7D68C636 /* SpotifySourceTests.swift */; };
@@ -41,9 +44,11 @@
 		B2FC9A01B8B1FF544D361B3F /* Secrets.example.plist in Resources */ = {isa = PBXBuildFile; fileRef = 328E027729B5A93D39068C7C /* Secrets.example.plist */; };
 		BA2D3E1E68FA87168F46FF1E /* LRCLIBClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4688F2973765498FC251906 /* LRCLIBClient.swift */; };
 		BAB34E02616B243EE8DA0FD5 /* LRCParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B07BCDA93210C8926EFC189 /* LRCParser.swift */; };
+		C21F3D729A4935130330C619 /* TTMLParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0E8180623C11AA55D8DF64 /* TTMLParserTests.swift */; };
 		D2FD9EF9591DD5197DED9E0D /* DriveVerseWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B5032A3403B70D48EC541330 /* DriveVerseWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D61EF3B7D29FC1F1721DDB9C /* LiveActivityUpdateThrottle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCE278CB74AAABCD52C0E9D1 /* LiveActivityUpdateThrottle.swift */; };
 		D8ED58A7DEE2EEA11B49F7BC /* LyricsCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4587993C109AD281E415EF9 /* LyricsCache.swift */; };
+		E2329F7E0C6B0F54928E4350 /* AppleMusicAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2901ECD457515DB9FE5436E3 /* AppleMusicAuthTests.swift */; };
 		E65836D2791CB7B558C760C6 /* LiveActivityPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E381F38AE762E88B34AF9A /* LiveActivityPolicyTests.swift */; };
 		EC4BE5FAA9921628AC3A2D0C /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD7A295A0865928BA32F559 /* AppModel.swift */; };
 		EF2C3EC57DE5B6C669EFD9F5 /* SpotifySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D230740C807DAFF0C3A621ED /* SpotifySource.swift */; };
@@ -88,7 +93,9 @@
 		166238F7FC0FF73346F83182 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		18E5FB7A2516764DD3D734E4 /* BackgroundKeeper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundKeeper.swift; sourceTree = "<group>"; };
 		191A3C57E8CCD995324E3DE0 /* NowPlayingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCoordinator.swift; sourceTree = "<group>"; };
+		1E0E8180623C11AA55D8DF64 /* TTMLParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTMLParserTests.swift; sourceTree = "<group>"; };
 		1FAFE0BD274A8225F8B15A4B /* AppleMusicSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicSource.swift; sourceTree = "<group>"; };
+		2901ECD457515DB9FE5436E3 /* AppleMusicAuthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicAuthTests.swift; sourceTree = "<group>"; };
 		328E027729B5A93D39068C7C /* Secrets.example.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Secrets.example.plist; sourceTree = "<group>"; };
 		33748827FA1F2961B39583A6 /* LRCParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRCParserTests.swift; sourceTree = "<group>"; };
 		3C344EA45D94C24E3372C435 /* Transliterator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transliterator.swift; sourceTree = "<group>"; };
@@ -96,6 +103,7 @@
 		519AFBF581C59568D1BC6BCB /* LiveActivityThrottleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityThrottleTests.swift; sourceTree = "<group>"; };
 		59FA7AA57D661AB7A26BF4DF /* LiveActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityController.swift; sourceTree = "<group>"; };
 		61126F206FA27DEAF30E275A /* LiveActivityUpdatePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityUpdatePolicy.swift; sourceTree = "<group>"; };
+		6CD228A318AF935BB7742934 /* AppleMusicAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicAuth.swift; sourceTree = "<group>"; };
 		7266FA38ED9709457C305111 /* ScaffoldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScaffoldTests.swift; sourceTree = "<group>"; };
 		751D649ABA7EA56CCE1096E0 /* TransliteratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransliteratorTests.swift; sourceTree = "<group>"; };
 		7778707E92D6356CE39C3C67 /* CoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoordinatorTests.swift; sourceTree = "<group>"; };
@@ -107,6 +115,7 @@
 		8F4833029C28CE94E1B93117 /* SyncEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineTests.swift; sourceTree = "<group>"; };
 		966612231B8FF4569AC4B77D /* NowPlayingSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingSource.swift; sourceTree = "<group>"; };
 		96FBECE39D05D602D1D21998 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9ECAFD8611A624FBB7B55EBE /* TTMLParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTMLParser.swift; sourceTree = "<group>"; };
 		A0B4549E3346E152F7BDE493 /* DriveVerseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DriveVerseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ADC4F0A911AA90F04EDD9D29 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		B22F7D809660551ADBB8DD67 /* DriveModeIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriveModeIntents.swift; sourceTree = "<group>"; };
@@ -120,6 +129,7 @@
 		CE443411721188CA1CD78AEB /* LyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsService.swift; sourceTree = "<group>"; };
 		D230740C807DAFF0C3A621ED /* SpotifySource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifySource.swift; sourceTree = "<group>"; };
 		D4688F2973765498FC251906 /* LRCLIBClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRCLIBClient.swift; sourceTree = "<group>"; };
+		D9D893F8C769ADE35D950ED0 /* AppleMusicSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicSignInSheet.swift; sourceTree = "<group>"; };
 		DA064D09A1101784EEF1ECE4 /* LyricsCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsCacheTests.swift; sourceTree = "<group>"; };
 		DCE278CB74AAABCD52C0E9D1 /* LiveActivityUpdateThrottle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityUpdateThrottle.swift; sourceTree = "<group>"; };
 		E4587993C109AD281E415EF9 /* LyricsCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsCache.swift; sourceTree = "<group>"; };
@@ -134,6 +144,7 @@
 		031D4F1C361F894319167C09 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
+				6CD228A318AF935BB7742934 /* AppleMusicAuth.swift */,
 				8A457EF455F2DAC410A89728 /* SpotifyAuth.swift */,
 			);
 			path = Auth;
@@ -142,6 +153,7 @@
 		16A2460303D2598F8CCB463E /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				D9D893F8C769ADE35D950ED0 /* AppleMusicSignInSheet.swift */,
 				F2C7886F813AC23359C59468 /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -171,6 +183,7 @@
 		59A756C0AA7227ECE0A68386 /* DriveVerseTests */ = {
 			isa = PBXGroup;
 			children = (
+				2901ECD457515DB9FE5436E3 /* AppleMusicAuthTests.swift */,
 				FBDAA6D02D67EAC13330BF88 /* AppleMusicMapperTests.swift */,
 				7778707E92D6356CE39C3C67 /* CoordinatorTests.swift */,
 				13E381F38AE762E88B34AF9A /* LiveActivityPolicyTests.swift */,
@@ -184,6 +197,7 @@
 				BCA7F680E5F709BA7D68C636 /* SpotifySourceTests.swift */,
 				8F4833029C28CE94E1B93117 /* SyncEngineTests.swift */,
 				751D649ABA7EA56CCE1096E0 /* TransliteratorTests.swift */,
+				1E0E8180623C11AA55D8DF64 /* TTMLParserTests.swift */,
 			);
 			path = DriveVerseTests;
 			sourceTree = "<group>";
@@ -197,6 +211,7 @@
 				EDB4D8EC98363806ED4367C8 /* LyricsMatcher.swift */,
 				CE443411721188CA1CD78AEB /* LyricsService.swift */,
 				3C344EA45D94C24E3372C435 /* Transliterator.swift */,
+				9ECAFD8611A624FBB7B55EBE /* TTMLParser.swift */,
 			);
 			path = Lyrics;
 			sourceTree = "<group>";
@@ -386,12 +401,15 @@
 				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					31CDF9776C5DFB3CC7CBB51A = {
+						DevelopmentTeam = 46K7A3U222;
 						ProvisioningStyle = Automatic;
 					};
 					B7C348DDE9E9033D535C0DE2 = {
+						DevelopmentTeam = 46K7A3U222;
 						ProvisioningStyle = Automatic;
 					};
 					DE7973B66E7FB705D2ABCC73 = {
+						DevelopmentTeam = 46K7A3U222;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -411,8 +429,8 @@
 			projectRoot = "";
 			targets = (
 				31CDF9776C5DFB3CC7CBB51A /* DriveVerse */,
-				B7C348DDE9E9033D535C0DE2 /* DriveVerseTests */,
 				DE7973B66E7FB705D2ABCC73 /* DriveVerseWidgets */,
+				B7C348DDE9E9033D535C0DE2 /* DriveVerseTests */,
 			);
 		};
 /* End PBXProject section */
@@ -435,6 +453,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2329F7E0C6B0F54928E4350 /* AppleMusicAuthTests.swift in Sources */,
 				9BA384F2E9E3FDEE3CF12008 /* AppleMusicMapperTests.swift in Sources */,
 				F33E5CF3DB483E6B209F87D4 /* CoordinatorTests.swift in Sources */,
 				45B35ED49CD2C195FD66CC96 /* LRCLIBClientTests.swift in Sources */,
@@ -447,6 +466,7 @@
 				8529D614A1619C2F9E88124C /* SpotifyAuthTests.swift in Sources */,
 				7B560BB37413F13CD2C2A307 /* SpotifySourceTests.swift in Sources */,
 				632FB0A9869AD363AEF1B1B2 /* SyncEngineTests.swift in Sources */,
+				C21F3D729A4935130330C619 /* TTMLParserTests.swift in Sources */,
 				435B627E39BF96A092465F41 /* TransliteratorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -465,6 +485,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				EC4BE5FAA9921628AC3A2D0C /* AppModel.swift in Sources */,
+				5B2B2A8B563733B3553930DF /* AppleMusicAuth.swift in Sources */,
+				6514244F0E87EB08AF28141D /* AppleMusicSignInSheet.swift in Sources */,
 				9926E31A0D1789CE345B2FFC /* AppleMusicSource.swift in Sources */,
 				1AD8F43DCAFB56CD772B2B29 /* BackgroundKeeper.swift in Sources */,
 				79504D01376FDC6F5E609362 /* DriveModeIntents.swift in Sources */,
@@ -486,6 +508,7 @@
 				FC14F3DF93F070781BA7B1BA /* SpotifyAuth.swift in Sources */,
 				EF2C3EC57DE5B6C669EFD9F5 /* SpotifySource.swift in Sources */,
 				041F2522B3ED8825FF6F9CB0 /* SyncEngine.swift in Sources */,
+				3DEA39D8F3A3D4AFF8B7638E /* TTMLParser.swift in Sources */,
 				1C6B7DDB918364888598725E /* Transliterator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -540,10 +563,10 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 46K7A3U222;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 46K7A3U222;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -659,10 +682,10 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 46K7A3U222;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 46K7A3U222;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
