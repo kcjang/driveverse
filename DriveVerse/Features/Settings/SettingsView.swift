@@ -80,6 +80,7 @@ struct SettingsView: View {
                             .font(.footnote)
                     }
                 }
+                Toggle("Romanize lyrics", isOn: romanizeBinding)
                 Button("Clear lyrics cache") {
                     model.clearLyricsCache()
                     cacheCleared = true
@@ -91,7 +92,7 @@ struct SettingsView: View {
             } header: {
                 Text("Lyrics")
             } footer: {
-                Text("Lyrics come from LRCLIB, a community database, so a track's timings are only as good as whoever uploaded them. Drag right if the lines run ahead of the music, left if they lag behind. Lyrics are cached on this device for at most 30 days.")
+                Text("Drag the offset right if the lines run ahead of the music, left if they lag behind — LRCLIB timings are only as good as whoever uploaded them. Romanizing rewrites non-Latin lyrics in the alphabet (\"새로운\" becomes \"saeloun\"), which only helps if you can't read the script. Lyrics are cached on this device for at most 30 days.")
             }
 
             Section {
@@ -123,6 +124,10 @@ struct SettingsView: View {
 
     private var pinBinding: Binding<SourcePin> {
         Binding(get: { model.sourcePin }, set: { model.sourcePin = $0 })
+    }
+
+    private var romanizeBinding: Binding<Bool> {
+        Binding(get: { model.romanizeLyrics }, set: { model.romanizeLyrics = $0 })
     }
 
     private var offsetBinding: Binding<Double> {

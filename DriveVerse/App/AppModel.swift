@@ -27,6 +27,7 @@ final class AppModel: ObservableObject {
     static let pollIntervalKey = "spotifyPollInterval"
     static let sourcePinKey = "sourcePin"
     static let lyricOffsetKey = "lyricOffsetMs"
+    static let romanizeLyricsKey = "romanizeLyrics"
     /// LRCLIB uploads of one song can disagree by a couple of seconds, so the
     /// nudge has to cover more than the sync engine's own tolerance.
     static let lyricOffsetRangeMs = 3000
@@ -69,6 +70,26 @@ final class AppModel: ObservableObject {
             coordinator.pin = newValue
             UserDefaults.standard.set(newValue.rawValue, forKey: Self.sourcePinKey)
         }
+    }
+
+    /// Romanization made sense when lyrics came from LRCLIB, which rarely
+    /// carries a native-script version at all. Apple returns the real thing,
+    /// so turning "새로운 시절인연" into "saeloun sijeol-in-yeon" is a
+    /// downgrade for anyone who reads the script — hence off by default,
+    /// and on only for those who want to sing along to a script they cannot
+    /// read. Toggling re-runs the lookup, which the cache makes free.
+    var romanizeLyrics: Bool {
+        get { UserDefaults.standard.bool(forKey: Self.romanizeLyricsKey) }
+        set {
+            guard newValue != romanizeLyrics else { return }
+            objectWillChange.send()
+            UserDefaults.standard.set(newValue, forKey: Self.romanizeLyricsKey)
+            retryLyrics()
+        }
+    }
+
+    private func displayText(_ text: String) -> String {
+        romanizeLyrics ? Transliterator.latinized(text) : text
     }
 
     /// Positive delays the lyrics. Ticking immediately makes the slider move
@@ -351,7 +372,7 @@ final class AppModel: ObservableObject {
                         LRCParser.parse(raw)
                     }
                     let lines = parsed.map {
-                        LRCLine(timeMs: $0.timeMs, text: Transliterator.latinized($0.text))
+                        LRCLine(timeMs: $0.timeMs, text: self.displayText($0.text))
                     }
                     if lines.isEmpty {
                         self.lyricsState = .notFound
@@ -360,7 +381,7 @@ final class AppModel: ObservableObject {
                         self.syncEngine.setLyrics(lines)
                     }
                 case .plain(let text):
-                    self.lyricsState = .plain(Transliterator.latinized(text))
+                    self.lyricsState = .plain(self.displayText(text))
                 case .instrumental:
                     self.lyricsState = .instrumental
                 case .notFound:
