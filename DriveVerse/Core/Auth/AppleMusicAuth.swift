@@ -251,6 +251,32 @@ final class AppleMusicAuth: ObservableObject {
         ]
     }
 
+    /// Everything a catalog request needs, resolving the storefront on first
+    /// use and reusing it afterwards.
+    func catalogContext() async throws -> AppleCatalogContext {
+        let headers = try await authorizedHeaders()
+        let resolved: AppleMusicStorefront
+        if let storefront {
+            resolved = storefront
+        } else {
+            resolved = try await refreshStorefront()
+        }
+        return AppleCatalogContext(
+            headers: headers,
+            storefront: resolved.id,
+            language: resolved.language
+        )
+    }
+
+    /// A 401 could be either credential and the response does not say which.
+    /// Dropping the developer token is cheap and self-healing — the next
+    /// attempt re-scrapes — while the reconnect flag covers the other case
+    /// and is cleared again by the next successful storefront read.
+    func handleUnauthorized() async {
+        developerToken = nil
+        needsReconnect = true
+    }
+
     @discardableResult
     func refreshStorefront() async throws -> AppleMusicStorefront {
         var request = URLRequest(url: URL(string: "https://amp-api.music.apple.com/v1/me/storefront")!)

@@ -37,6 +37,9 @@ final class AppModel: ObservableObject {
 
     @Published private(set) var nowPlaying: NowPlayingState?
     @Published private(set) var lyricsState: LyricsDisplayState = .idle
+    /// Which provider served the current lyrics. Diagnostic for the Apple
+    /// lyrics spike; goes with the Home readout.
+    @Published private(set) var lyricsProvider: String?
     @Published private(set) var position: LyricsPosition?
     @Published private(set) var appleMusicAuth: MediaAuthStatus = .unknown
     @Published private(set) var spotifyConnected = false
@@ -96,7 +99,7 @@ final class AppModel: ObservableObject {
 #endif
     private let coordinator: NowPlayingCoordinator
     private let syncEngine = SyncEngine()
-    private let lyricsService = LyricsService()
+    private let lyricsService: LyricsService
 
     private var cancellables: Set<AnyCancellable> = []
     private var lyricsTask: Task<Void, Never>?
@@ -127,6 +130,12 @@ final class AppModel: ObservableObject {
             applePublisher: applePublisher,
             spotifyPublisher: spotify.statePublisher,
             pin: savedPin.flatMap(SourcePin.init(rawValue:)) ?? .auto
+        )
+
+        let appleAuth = appleLyricsAuth
+        lyricsService = LyricsService(
+            appleClient: AppleLyricsClient(credentials: appleAuth),
+            appleCredentials: appleAuth
         )
 
         syncEngine.lyricOffsetMs = UserDefaults.standard.integer(forKey: Self.lyricOffsetKey)
@@ -329,9 +338,19 @@ final class AppModel: ObservableObject {
             do {
                 let result = try await self.lyricsService.lyrics(for: state)
                 guard !Task.isCancelled else { return }
+                self.lyricsProvider = switch result {
+                case .syncedTTML: "Apple Music"
+                case .synced, .plain, .instrumental: "LRCLIB"
+                case .notFound: nil
+                }
                 switch result {
-                case .synced(let raw):
-                    let lines = LRCParser.parse(raw).map {
+                case .synced(let raw), .syncedTTML(let raw):
+                    let parsed = if case .syncedTTML = result {
+                        TTMLParser.parse(raw)
+                    } else {
+                        LRCParser.parse(raw)
+                    }
+                    let lines = parsed.map {
                         LRCLine(timeMs: $0.timeMs, text: Transliterator.latinized($0.text))
                     }
                     if lines.isEmpty {

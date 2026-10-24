@@ -50,7 +50,9 @@
 		D8ED58A7DEE2EEA11B49F7BC /* LyricsCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4587993C109AD281E415EF9 /* LyricsCache.swift */; };
 		E2329F7E0C6B0F54928E4350 /* AppleMusicAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2901ECD457515DB9FE5436E3 /* AppleMusicAuthTests.swift */; };
 		E65836D2791CB7B558C760C6 /* LiveActivityPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E381F38AE762E88B34AF9A /* LiveActivityPolicyTests.swift */; };
+		E96E030F01EC364B008C50C7 /* AppleLyricsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D458860C521CCDCE09B24550 /* AppleLyricsClient.swift */; };
 		EC4BE5FAA9921628AC3A2D0C /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD7A295A0865928BA32F559 /* AppModel.swift */; };
+		ED57367F363B28A1DC99FCB2 /* AppleLyricsClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 089F9AB5B1EB9172B85798AA /* AppleLyricsClientTests.swift */; };
 		EF2C3EC57DE5B6C669EFD9F5 /* SpotifySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D230740C807DAFF0C3A621ED /* SpotifySource.swift */; };
 		F33E5CF3DB483E6B209F87D4 /* CoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7778707E92D6356CE39C3C67 /* CoordinatorTests.swift */; };
 		FC14F3DF93F070781BA7B1BA /* SpotifyAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A457EF455F2DAC410A89728 /* SpotifyAuth.swift */; };
@@ -88,6 +90,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		089F9AB5B1EB9172B85798AA /* AppleLyricsClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLyricsClientTests.swift; sourceTree = "<group>"; };
 		0B31B5A3C84D01E73354E11D /* LyricsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsScreen.swift; sourceTree = "<group>"; };
 		13E381F38AE762E88B34AF9A /* LiveActivityPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityPolicyTests.swift; sourceTree = "<group>"; };
 		166238F7FC0FF73346F83182 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -128,6 +131,7 @@
 		CDD7A295A0865928BA32F559 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		CE443411721188CA1CD78AEB /* LyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsService.swift; sourceTree = "<group>"; };
 		D230740C807DAFF0C3A621ED /* SpotifySource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifySource.swift; sourceTree = "<group>"; };
+		D458860C521CCDCE09B24550 /* AppleLyricsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLyricsClient.swift; sourceTree = "<group>"; };
 		D4688F2973765498FC251906 /* LRCLIBClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRCLIBClient.swift; sourceTree = "<group>"; };
 		D9D893F8C769ADE35D950ED0 /* AppleMusicSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicSignInSheet.swift; sourceTree = "<group>"; };
 		DA064D09A1101784EEF1ECE4 /* LyricsCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsCacheTests.swift; sourceTree = "<group>"; };
@@ -183,6 +187,7 @@
 		59A756C0AA7227ECE0A68386 /* DriveVerseTests */ = {
 			isa = PBXGroup;
 			children = (
+				089F9AB5B1EB9172B85798AA /* AppleLyricsClientTests.swift */,
 				2901ECD457515DB9FE5436E3 /* AppleMusicAuthTests.swift */,
 				FBDAA6D02D67EAC13330BF88 /* AppleMusicMapperTests.swift */,
 				7778707E92D6356CE39C3C67 /* CoordinatorTests.swift */,
@@ -205,6 +210,7 @@
 		5FE9ED2BB149DD6222FAA9F1 /* Lyrics */ = {
 			isa = PBXGroup;
 			children = (
+				D458860C521CCDCE09B24550 /* AppleLyricsClient.swift */,
 				D4688F2973765498FC251906 /* LRCLIBClient.swift */,
 				7B07BCDA93210C8926EFC189 /* LRCParser.swift */,
 				E4587993C109AD281E415EF9 /* LyricsCache.swift */,
@@ -453,6 +459,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ED57367F363B28A1DC99FCB2 /* AppleLyricsClientTests.swift in Sources */,
 				E2329F7E0C6B0F54928E4350 /* AppleMusicAuthTests.swift in Sources */,
 				9BA384F2E9E3FDEE3CF12008 /* AppleMusicMapperTests.swift in Sources */,
 				F33E5CF3DB483E6B209F87D4 /* CoordinatorTests.swift in Sources */,
@@ -485,6 +492,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EC4BE5FAA9921628AC3A2D0C /* AppModel.swift in Sources */,
+				E96E030F01EC364B008C50C7 /* AppleLyricsClient.swift in Sources */,
 				5B2B2A8B563733B3553930DF /* AppleMusicAuth.swift in Sources */,
 				6514244F0E87EB08AF28141D /* AppleMusicSignInSheet.swift in Sources */,
 				9926E31A0D1789CE345B2FFC /* AppleMusicSource.swift in Sources */,

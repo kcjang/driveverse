@@ -15,6 +15,11 @@ struct LRCLIBResponse: Codable, Equatable {
 enum LyricsFetchResult: Codable, Equatable {
     /// Raw LRC text — parse with LRCParser.
     case synced(String)
+    /// Raw Apple TTML — parse with TTMLParser. Kept as its own case rather
+    /// than converted to LRC on the way in: a round trip through LRC would
+    /// throw away the word timings for nothing, and the cache keeping the
+    /// original payload is what makes a provider bug diagnosable later.
+    case syncedTTML(String)
     /// Un-synced lyrics — display without highlighting.
     case plain(String)
     case instrumental
