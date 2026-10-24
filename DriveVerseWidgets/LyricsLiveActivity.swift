@@ -83,22 +83,29 @@ struct LockScreenLyricsView: View {
     /// an observer app can't seek, so it would never be interactive and
     /// only steals space from the lyric.
     private var smallBody: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 2) {
+            Spacer(minLength: 0)
+
             Text(context.state.currentLine)
-                .font(.title3.bold())
+                .font(.title.bold())
                 .lineLimit(2)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.5)
                 .contentTransition(.opacity)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(context.state.nextLine)
-                .font(.caption2)
+                .font(.callout)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .id(context.state.nextLine)
                 .transition(.push(from: .bottom))
+
+            Spacer(minLength: 0)
         }
-        .padding(10)
+        .frame(maxHeight: .infinity)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .animation(.smooth(duration: 0.5), value: context.state)
     }
 
