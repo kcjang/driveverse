@@ -154,7 +154,7 @@ It covers lyric parsing, title/artist matching, the sync engine, the LRCLIB clie
 - DriveVerse can't control playback (it's just watching), so the lyrics view is display-only by design.
 - If a song isn't in LRCLIB, you'll see "No lyrics found." Misses are re-checked the next day; hits are cached.
 - Lyrics show in their own script. If you'd rather sing along to a script you can't read, Settings → Lyrics → Romanize rewrites them in the alphabet ("새로운" becomes "saeloun"); it's off by default and the transliteration is occasionally a little literal.
-- There's no dedicated CarPlay dashboard widget yet — the Live Activity covers the driving experience. It's a possible future addition.
+- There's no CarPlay dashboard widget, and there won't be. A widget can follow a song perfectly — WidgetKit honoured 2-second timeline entries with no drift when measured — but it can't react: reload requests went unanswered for 74 seconds straight. Pause or skip a track and the widget would keep showing the old song's lyrics for over a minute, which in a car is worse than no tile at all. The Live Activity updates the instant the line changes, so that's what DriveVerse uses.
 
 ## How the project is organized
 
