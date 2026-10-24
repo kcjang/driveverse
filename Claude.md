@@ -111,7 +111,7 @@ Normalize before querying LRCLIB: lowercase, strip parenthetical suffixes ("(Rem
 - CarPlay renders the lock-screen Live Activity presentation automatically on iOS 26 — no extra code, but keep the layout legible at small sizes: high contrast, no more than two text rows plus progress.
 - Info.plist: `NSSupportsLiveActivities = YES` in the app target.
 
-**Stretch (build last, behind a feature flag):** an iOS 26 CarPlay-capable WidgetKit widget showing the current line. The CarPlay widget opt-in API is new — consult current Apple documentation for the exact WidgetKit configuration rather than guessing; if unclear, ship without it and note it in README.
+**Settled — do not build:** a CarPlay WidgetKit widget showing the current line. Measured on device 2026-10-24, and the API turned out to be opt-*out* (`WidgetLocation.carPlay` is only consumed by `disfavoredLocations`), so a widget reaches CarPlay by default. Timeline entries are also exact: 2-second entries advanced with zero drift over 49 of them. What kills it is reloads — the app asked every 20 s and not one landed in 74 seconds. Entries are pre-scheduled and free; `reloadTimelines` is budget-governed. A widget could therefore follow a song it already knows, but could not react to a pause, a seek or a skip for more than a minute, which is most of what happens while driving. Live Activities update on the line change itself. If this is ever revisited, re-measure the reload throttle first — that one number decides it.
 
 ---
 
