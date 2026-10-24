@@ -19,21 +19,41 @@ struct AppleMusicSnapshot: Equatable {
 }
 
 enum AppleMusicStateMapper {
-    static func state(from snapshot: AppleMusicSnapshot?, capturedAt: Date) -> NowPlayingState? {
+    /// `previous` is the last state this source emitted, used only to survive
+    /// an unreadable position — see below.
+    static func state(
+        from snapshot: AppleMusicSnapshot?,
+        capturedAt: Date,
+        previous: NowPlayingState? = nil
+    ) -> NowPlayingState? {
         guard let snapshot, let title = snapshot.title, !title.isEmpty else { return nil }
+        let artist = snapshot.artist ?? ""
         let durationMs = (snapshot.durationSec.isFinite && snapshot.durationSec > 0)
             ? Int(snapshot.durationSec * 1000) : nil
-        let positionMs = (snapshot.positionSec.isFinite && snapshot.positionSec > 0)
-            ? Int(snapshot.positionSec * 1000) : 0
+
+        // MediaPlayer hands out a NaN currentPlaybackTime while the player is
+        // in an indeterminate state. Reading that as position 0 looks like a
+        // seek to the top of the track, so the sync engine would snap the
+        // lyrics back to the first line mid-song. Carry the previous anchor
+        // forward instead — position *and* the time it was captured, so
+        // extrapolation simply keeps running. With nothing to carry (first
+        // report, or a different track) 0 is all we have.
+        let carried = previous.flatMap {
+            ($0.source == .appleMusic && $0.title == title && $0.artist == artist) ? $0 : nil
+        }
+        let anchor: (positionMs: Int, capturedAt: Date) = snapshot.positionSec.isFinite
+            ? (max(0, Int(snapshot.positionSec * 1000)), capturedAt)
+            : (carried?.positionMs ?? 0, carried?.capturedAt ?? capturedAt)
+
         return NowPlayingState(
             title: title,
-            artist: snapshot.artist ?? "",
+            artist: artist,
             album: snapshot.album,
             durationMs: durationMs,
-            positionMs: positionMs,
+            positionMs: anchor.positionMs,
             isPlaying: snapshot.isPlaying,
             source: .appleMusic,
-            capturedAt: capturedAt
+            capturedAt: anchor.capturedAt
         )
     }
 }
@@ -90,6 +110,7 @@ final class AppleMusicSource: NowPlayingSource {
         observers.forEach(NotificationCenter.default.removeObserver)
         observers = []
         lastSnapshot = nil
+        lastState = nil
         player.endGeneratingPlaybackNotifications()
     }
 
@@ -123,6 +144,9 @@ final class AppleMusicSource: NowPlayingSource {
     }
 
     private var lastSnapshot: AppleMusicSnapshot??
+    /// Last emitted state — the mapper reuses its anchor when the player
+    /// reports an unreadable (NaN) position.
+    private var lastState: NowPlayingState?
 
     private func emit() {
         let snapshot = player.nowPlayingItem.map { item in
@@ -140,7 +164,13 @@ final class AppleMusicSource: NowPlayingSource {
         // changes only, keeping the UI and sync pipeline quiet.
         guard snapshot != lastSnapshot else { return }
         lastSnapshot = snapshot
-        subject.send(AppleMusicStateMapper.state(from: snapshot, capturedAt: Date()))
+        // A NaN position makes every snapshot compare unequal, so this path
+        // repeats while the player is indeterminate; the carried-forward
+        // anchor makes each state identical and the coordinator's
+        // removeDuplicates() absorbs them.
+        let state = AppleMusicStateMapper.state(from: snapshot, capturedAt: Date(), previous: lastState)
+        lastState = state
+        subject.send(state)
     }
 }
 #endif

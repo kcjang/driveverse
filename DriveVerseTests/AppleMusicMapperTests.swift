@@ -39,6 +39,65 @@ import Foundation
         #expect(AppleMusicStateMapper.state(from: snapshot, capturedAt: at)?.positionMs == 0)
     }
 
+    /// Regression: a NaN position used to map to 0 while isPlaying stayed
+    /// true, which the sync engine read as a seek to the top of the track and
+    /// snapped the lyrics back to the first line mid-song. The previous
+    /// anchor — position *and* its capture time — must survive instead, so
+    /// extrapolation carries on uninterrupted.
+    @Test func nanPositionKeepsPreviousAnchorForSameTrack() {
+        let previous = NowPlayingState(
+            title: "T", artist: "A", album: nil,
+            durationMs: 100_000, positionMs: 42_000,
+            isPlaying: true, source: .appleMusic,
+            capturedAt: at.addingTimeInterval(-7)
+        )
+        let snapshot = AppleMusicSnapshot(
+            title: "T", artist: "A", album: nil,
+            durationSec: 100, positionSec: .nan, isPlaying: true
+        )
+        let state = AppleMusicStateMapper.state(from: snapshot, capturedAt: at, previous: previous)
+        #expect(state?.positionMs == 42_000)
+        #expect(state?.capturedAt == at.addingTimeInterval(-7))
+
+        // The sync engine must see no seek: extrapolating the carried anchor
+        // lands exactly where the old one would have.
+        let now = at
+        let engine = SyncEngine(now: { now })
+        engine.apply(previous)
+        engine.apply(state)
+        #expect(engine.anchor == previous)
+    }
+
+    @Test func nanPositionOnADifferentTrackStartsAtZero() {
+        let previous = NowPlayingState(
+            title: "Old", artist: "A", album: nil,
+            durationMs: 100_000, positionMs: 42_000,
+            isPlaying: true, source: .appleMusic, capturedAt: at.addingTimeInterval(-7)
+        )
+        let snapshot = AppleMusicSnapshot(
+            title: "New", artist: "A", album: nil,
+            durationSec: 100, positionSec: .nan, isPlaying: true
+        )
+        let state = AppleMusicStateMapper.state(from: snapshot, capturedAt: at, previous: previous)
+        #expect(state?.positionMs == 0)
+        #expect(state?.capturedAt == at)
+    }
+
+    @Test func readablePositionIgnoresPrevious() {
+        let previous = NowPlayingState(
+            title: "T", artist: "A", album: nil,
+            durationMs: 100_000, positionMs: 42_000,
+            isPlaying: true, source: .appleMusic, capturedAt: at.addingTimeInterval(-7)
+        )
+        let snapshot = AppleMusicSnapshot(
+            title: "T", artist: "A", album: nil,
+            durationSec: 100, positionSec: 3, isPlaying: true
+        )
+        let state = AppleMusicStateMapper.state(from: snapshot, capturedAt: at, previous: previous)
+        #expect(state?.positionMs == 3_000)
+        #expect(state?.capturedAt == at)
+    }
+
     @Test func zeroDurationBecomesNil() {
         let snapshot = AppleMusicSnapshot(
             title: "T", artist: "A", album: nil,

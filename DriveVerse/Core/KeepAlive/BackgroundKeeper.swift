@@ -27,6 +27,8 @@ final class BackgroundKeeper: NSObject, CLLocationManagerDelegate {
 
     private let manager = CLLocationManager()
     private var wantsRunning = false
+    /// One permission prompt per Drive Mode session — cleared by stop().
+    private var didRequestAuthorization = false
     private(set) var isRunning = false
 
     /// Surfaced on the Home screen when a permission problem blocks Drive Mode.
@@ -49,7 +51,11 @@ final class BackgroundKeeper: NSObject, CLLocationManagerDelegate {
         wantsRunning = true
         switch manager.authorizationStatus {
         case .notDetermined:
-            // activate() follows from the delegate callback once granted.
+            // The pipeline re-enters start() twice a second while the prompt
+            // is up (isRunning stays false until the user answers), so ask
+            // once. activate() follows from the delegate callback.
+            guard !didRequestAuthorization else { return }
+            didRequestAuthorization = true
             manager.requestWhenInUseAuthorization()
         case .denied, .restricted:
             wantsRunning = false
@@ -59,8 +65,12 @@ final class BackgroundKeeper: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Safe to call when not running: it also clears a pending request, so a
+    /// permission granted after Drive Mode was switched off cannot activate
+    /// the session behind the user's back.
     func stop() {
         wantsRunning = false
+        didRequestAuthorization = false
         guard isRunning else { return }
         isRunning = false
         manager.stopUpdatingLocation()
