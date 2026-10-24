@@ -153,7 +153,7 @@ It covers lyric parsing, title/artist matching, the sync engine, the LRCLIB clie
 - Spotify position is polled every few seconds, so a seek in Spotify can take a moment to catch up. Apple Music is instant.
 - DriveVerse can't control playback (it's just watching), so the lyrics view is display-only by design.
 - If a song isn't in LRCLIB, you'll see "No lyrics found." Misses are re-checked the next day; hits are cached.
-- Romanization uses the standard system transliteration, which is very readable but occasionally a little literal.
+- Lyrics show in their own script. If you'd rather sing along to a script you can't read, Settings → Lyrics → Romanize rewrites them in the alphabet ("새로운" becomes "saeloun"); it's off by default and the transliteration is occasionally a little literal.
 - There's no dedicated CarPlay dashboard widget yet — the Live Activity covers the driving experience. It's a possible future addition.
 
 ## How the project is organized
