@@ -26,6 +26,10 @@ final class AppModel: ObservableObject {
 
     static let pollIntervalKey = "spotifyPollInterval"
     static let sourcePinKey = "sourcePin"
+    static let lyricOffsetKey = "lyricOffsetMs"
+    /// LRCLIB uploads of one song can disagree by a couple of seconds, so the
+    /// nudge has to cover more than the sync engine's own tolerance.
+    static let lyricOffsetRangeMs = 3000
 
     private static let log = Logger(subsystem: "com.kichang.driveverse", category: "pipeline")
 
@@ -61,6 +65,20 @@ final class AppModel: ObservableObject {
             objectWillChange.send()
             coordinator.pin = newValue
             UserDefaults.standard.set(newValue.rawValue, forKey: Self.sourcePinKey)
+        }
+    }
+
+    /// Positive delays the lyrics. Ticking immediately makes the slider move
+    /// the line on screen as the user drags it.
+    var lyricOffsetMs: Int {
+        get { syncEngine.lyricOffsetMs }
+        set {
+            let clamped = min(Self.lyricOffsetRangeMs, max(-Self.lyricOffsetRangeMs, newValue))
+            guard clamped != syncEngine.lyricOffsetMs else { return }
+            objectWillChange.send()
+            syncEngine.lyricOffsetMs = clamped
+            UserDefaults.standard.set(clamped, forKey: Self.lyricOffsetKey)
+            syncEngine.tick()
         }
     }
 
@@ -107,6 +125,8 @@ final class AppModel: ObservableObject {
             spotifyPublisher: spotify.statePublisher,
             pin: savedPin.flatMap(SourcePin.init(rawValue:)) ?? .auto
         )
+
+        syncEngine.lyricOffsetMs = UserDefaults.standard.integer(forKey: Self.lyricOffsetKey)
 
         wire()
 

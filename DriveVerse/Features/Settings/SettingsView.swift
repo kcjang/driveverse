@@ -42,6 +42,24 @@ struct SettingsView: View {
             }
 
             Section {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Lyric offset")
+                        Spacer()
+                        Text(offsetLabel)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    Slider(
+                        value: offsetBinding,
+                        in: Double(-AppModel.lyricOffsetRangeMs)...Double(AppModel.lyricOffsetRangeMs),
+                        step: 100
+                    )
+                    if model.lyricOffsetMs != 0 {
+                        Button("Reset to 0") { model.lyricOffsetMs = 0 }
+                            .font(.footnote)
+                    }
+                }
                 Button("Clear lyrics cache") {
                     model.clearLyricsCache()
                     cacheCleared = true
@@ -53,7 +71,7 @@ struct SettingsView: View {
             } header: {
                 Text("Lyrics")
             } footer: {
-                Text("Lyrics come from LRCLIB and are cached on this device for at most 30 days.")
+                Text("Lyrics come from LRCLIB, a community database, so a track's timings are only as good as whoever uploaded them. Drag right if the lines run ahead of the music, left if they lag behind. Lyrics are cached on this device for at most 30 days.")
             }
 
             Section {
@@ -80,5 +98,16 @@ struct SettingsView: View {
 
     private var pinBinding: Binding<SourcePin> {
         Binding(get: { model.sourcePin }, set: { model.sourcePin = $0 })
+    }
+
+    private var offsetBinding: Binding<Double> {
+        Binding(get: { Double(model.lyricOffsetMs) }, set: { model.lyricOffsetMs = Int($0) })
+    }
+
+    /// "0 s", "+0.5 s", "−1.2 s" — a signed seconds reading at slider step.
+    private var offsetLabel: String {
+        let seconds = Double(model.lyricOffsetMs) / 1000
+        if seconds == 0 { return "0 s" }
+        return String(format: "%@%.1f s", seconds > 0 ? "+" : "−", abs(seconds))
     }
 }

@@ -55,7 +55,9 @@ struct LRCLIBClient {
             return Self.result(from: hit)
         }
         let candidates = try await search(track: normTitle, artist: normArtist)
-        if let best = LyricsMatcher.bestMatch(from: candidates, title: title, durationMs: durationMs) {
+        if let best = LyricsMatcher.bestMatch(
+            from: candidates, title: title, artist: artist, album: album, durationMs: durationMs
+        ) {
             return Self.result(from: best)
         }
         return .notFound

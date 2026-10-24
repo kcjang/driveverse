@@ -94,6 +94,36 @@ private func state(
         #expect(engine.anchor?.positionMs == 25_000)
     }
 
+    /// Apple Music reports an exact position every second, so the 2 s grace
+    /// that absorbs Spotify's polling jitter only let a visible lag sit there
+    /// uncorrected. Half a second is a real correction there.
+    @Test func appleMusicCorrectsSubSecondDrift() {
+        var fakeNow = t0
+        let engine = SyncEngine(now: { fakeNow })
+        engine.apply(state(positionMs: 10_000, capturedAt: t0, source: .appleMusic))
+
+        fakeNow = t0.addingTimeInterval(1)
+        engine.apply(state(positionMs: 10_200, capturedAt: fakeNow, source: .appleMusic))
+        #expect(engine.anchor?.positionMs == 10_200)
+        #expect(engine.anchor?.capturedAt == fakeNow)
+    }
+
+    @Test func appleMusicStillIgnoresTinyJitter() {
+        var fakeNow = t0
+        let engine = SyncEngine(now: { fakeNow })
+        engine.apply(state(positionMs: 10_000, capturedAt: t0, source: .appleMusic))
+
+        // 100 ms off the extrapolated 11 s — under the 500 ms Apple threshold.
+        fakeNow = t0.addingTimeInterval(1)
+        engine.apply(state(positionMs: 10_900, capturedAt: fakeNow, source: .appleMusic))
+        #expect(engine.anchor?.positionMs == 10_000)
+    }
+
+    @Test func spotifyKeepsTheWiderTolerance() {
+        #expect(SyncEngine.seekThresholdMs(for: .spotify) == 2000)
+        #expect(SyncEngine.seekThresholdMs(for: .appleMusic) == 500)
+    }
+
     @Test func trackChangeAlwaysSnaps() {
         let engine = SyncEngine(now: { t0 })
         engine.apply(state(title: "Old", positionMs: 100_000))
@@ -147,6 +177,44 @@ private func state(
         #expect(pos?.lineIndex == nil)
         #expect(pos?.currentLine == nil)
         #expect(pos?.nextLine == "one")
+    }
+
+    /// Positive offset delays the lyrics: at 12 s with a +2.5 s nudge the
+    /// engine looks up 9.5 s, which is still the 5 s line.
+    @Test func positiveOffsetDelaysTheLine() {
+        var fakeNow = t0
+        let engine = SyncEngine(now: { fakeNow })
+        engine.lyricOffsetMs = 2_500
+        engine.setLyrics(lines)
+        engine.apply(state(positionMs: 10_000, capturedAt: t0))
+
+        fakeNow = t0.addingTimeInterval(2) // true position 12 s
+        engine.tick()
+
+        let pos = engine.positionSubject.value
+        #expect(pos?.currentLine == "one")
+        #expect(pos?.nextLine == "two")
+        // The nudge must not touch the reported position or the progress bar.
+        #expect(pos?.positionMs == 12_000)
+        #expect(abs((pos?.trackProgress ?? 0) - 0.05) < 0.001)
+    }
+
+    @Test func negativeOffsetAdvancesTheLine() {
+        var fakeNow = t0
+        let engine = SyncEngine(now: { fakeNow })
+        engine.lyricOffsetMs = -3_000
+        engine.setLyrics(lines)
+        engine.apply(state(positionMs: 10_000, capturedAt: t0))
+
+        fakeNow = t0.addingTimeInterval(7) // true position 17 s, lookup at 20 s
+        engine.tick()
+        #expect(engine.positionSubject.value?.currentLine == "three")
+    }
+
+    @Test func zeroOffsetMatchesTheUnoffsetLookup() {
+        let withDefault = SyncEngine.position(atMs: 12_000, lines: lines, durationMs: 240_000, isPlaying: true)
+        let withZero = SyncEngine.position(atMs: 12_000, lines: lines, durationMs: 240_000, isPlaying: true, lyricOffsetMs: 0)
+        #expect(withDefault == withZero)
     }
 
     @Test func nilStateClearsPosition() {
